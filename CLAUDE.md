@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**DebtFree AI** — assistente de IA para superendividados brasileiros. Prioriza dívidas, explica direitos pela Lei 14.181/2021 e gera cartas de negociação personalizadas. Projeto de hackathon do Grupo 5 (Orla Tech).
+**DebtFree AI** (nome de trabalho: **Passo**) — assistente de IA para superendividados brasileiros. Prioriza dívidas, explica direitos pela Lei 14.181/2021 e gera cartas de negociação personalizadas. Projeto de hackathon do Grupo 5 (Orla Tech).
+
+> "Passo" é o nome de marca em desenvolvimento. O produto deve sentir como **uma pausa segura no meio da pressão** — nunca um banco, uma cobradora ou uma promessa milagrosa.
+
+**Persona central:** Mariana, 38 anos, Guarulhos, ~R$2.800/mês, múltiplas dívidas, resolve tudo pelo celular, tem medo de aceitar uma proposta que não vai conseguir cumprir.
+
+---
 
 ## Stack
 
@@ -41,7 +47,7 @@ Prioridade: `session["debt_data"]` → `MOCK_DEBT_DATA[cpf]` → fallback para J
 - `debtfree/rules.py` — priorização de dívidas (PRIORITY_ORDER), classificação da situação financeira (safe/warning/critical), enriquecimento com `type_label` e `is_prescribed`
 - `debtfree/financial_service.py` — BCB API (séries SGS), cálculos de amortização, `financial_summary`, `amortization_tip` por dívida, `prescription_detail` com data exata
 - `debtfree/claude_service.py` — `analyze_debts()` e `generate_letter()` via Anthropic SDK. Cliente criado lazy via `get_client()` para não exigir API key no boot
-- `debtfree/mock_data.py` — `MOCK_USERS` e `MOCK_DEBT_DATA` indexados por CPF. Perfis disponíveis: João (`123.456.789-00`, superendividado crítico) e Ana (`987.654.321-00`, atenção). Senha: `senha123`. Ver `design/personas/personas.md` para os 4 perfis de demo completos (Carlos e Maria ainda não estão no mock).
+- `debtfree/mock_data.py` — `MOCK_USERS` e `MOCK_DEBT_DATA` indexados por CPF. 4 perfis: João (`123.456.789-00`, crítico), Ana (`987.654.321-00`, atenção), Carlos (`000.000.001-00`, controlado), Maria (`000.000.002-00`, prescrita). Senha: `senha123`
 - `debtfree/auth.py` — decorator `@login_required` que redireciona para `/login/`
 - `debtfree/context_processors.py` — injeta `current_user` em todos os templates
 
@@ -77,12 +83,13 @@ Definidas em `docs/business-rules.md` e implementadas em `rules.py`:
 - `views.analyze` — `analysis: None` precisa ser substituído por `claude_service.analyze_debts()` quando Luis integrar
 - `views.letter` — carta mockada precisa ser substituída por `claude_service.generate_letter()`
 - `financial_service.get_market_rates()` — sem cache; em produção, adicionar `django.core.cache`
+- **Pendente visual:** paleta atual usa Tailwind blue-600; direção de marca é teal `#2C8377` — migrar quando houver tempo
 
 ## design/ — Copy e Personas
 
 - `design/copy/ui-copy.md` — microcopy oficial de toda a UI. Tom: empático, simples e encorajador. Usar esses textos nos templates — não inventar copy alternativo.
 - `design/copy/legal-disclaimer.md` — disclaimers legais obrigatórios em três versões: curta (rodapé), média (abaixo da análise) e prescrição (quando `is_prescribed` for verdadeiro). Exibir conforme o contexto.
-- `design/personas/personas.md` — 4 personas para demo e testes: Carlos (🟡 controlado), Ana (🟠 atenção, risco despejo), João (🔴 superendividado crítico), Maria (🟡 dívida prescrita — edge case para testar flag de prescrição). Os perfis João e Ana têm equivalentes em `mock_data.py`; Carlos e Maria são apenas referência de demo.
+- `design/personas/personas.md` — 4 personas para demo e testes: Carlos (🟢 controlado), Ana (🟡 atenção, risco despejo), João (🔴 superendividado crítico), Maria (🟢 dívida prescrita — edge case). Todos têm equivalente em `mock_data.py`.
 
 ## backend/src/services/claudeService.js
 
@@ -92,7 +99,50 @@ Implementação Node.js da integração com Claude — **ativa**, não residual.
 - Modelo: `claude-opus-4-8`. System prompt compartilhado define persona empática e limites (orientação educativa, não consultoria jurídica).
 - `parseJsonResponse()` — extrai JSON resiliente (remove markdown fences se presentes).
 
-A versão Python equivalente está em `debtfree/claude_service.py` (usa Anthropic SDK Python). Os prompts canônicos vivem no arquivo JS acima — ao ajustar tom ou estrutura de resposta, manter os dois em sincronia.
+A versão Python equivalente está em `debtfree/claude_service.py`. Os prompts canônicos vivem no arquivo JS — ao ajustar tom ou estrutura de resposta, manter os dois em sincronia.
+
+---
+
+## Brand & Design Foundations (Passo)
+
+Regras de voz e visual que se aplicam a qualquer tela do produto, independente da stack.
+
+### Voz e conteúdo
+
+- Tom: **calma, direta, acolhedora, didática, transparente, não julgadora.** Reduz ansiedade; nunca envergonha.
+- Tratar o usuário como **"você"**; falar *com* ele — usar **"vamos"**. Nunca imperativo de cobrança.
+- **Sentence case** em tudo (títulos, botões, labels). MAIÚSCULAS apenas em eyebrow labels pequenos.
+- **Sem emoji na UI/copy.** Ícones fazem o trabalho visual. *(Nota: versão atual ainda usa emoji — migrar para Lucide progressivamente.)*
+- Dinheiro em BRL: `R$ 1.240,90` (vírgula decimal, ponto milhar), numerais tabulares.
+- Erros **orientam** ("Você pode revisar antes de salvar"), nunca repreendem. Toda recomendação responde **"por que estou vendo isso?"**.
+- Preferir palavras simples: "Valor total" (não *saldo consolidado*), "Dívida em atraso" (não *inadimplência ativa*), "Parcela que cabe no mês" (não *capacidade de pagamento*), "Gastos essenciais" (não *mínimo existencial*).
+- **Evitar:** "Você está devendo" · "Sua situação é grave" · "Regularize imediatamente" · "Limpe seu nome agora" · "Oferta imperdível / Última chance".
+- Disclaimer sempre disponível: *"Esta ferramenta oferece orientação informativa e não substitui apoio jurídico ou financeiro especializado."*
+
+### Fundações visuais
+
+- **Cor** — primária: teal calmo `#2C8377` (verde azulado; **não** azul de banco). Secundária: areia/pêssego quente. Neutros warm-gray. Escada semântica `safe → attention → caution → critical → info`; **vermelho é raro e nunca superfície dominante**. Significado nunca por cor sozinha — sempre par ícone + label.
+- **Tipografia** — uma família: **Plus Jakarta Sans**. Mobile-first; corpo ≥14px, labels ≥12px. Valores monetários com `font-variant-numeric: tabular-nums`.
+- **Espaçamento** — base 4px. Gutter mobile 20px, padding card 16px, gap de seção 28px, gap entre cards 12px. Touch targets ≥44px.
+- **Raio/elevação** — arredondado suave (cards 14px, inputs 10px, sheets 24px, botões pill). Sombra warm-tinted suave ou borda hairline. Sem sombras duras estilo fintech.
+- **Movimento** — calmo: 120–320ms, easing suave, fades/slides gentis, press scale 0.98. Sem bounce, sem decoração em loop. Respeitar `prefers-reduced-motion`.
+- **Ícones** — **Lucide** (linha 2px arredondada), via CDN: `<i data-lucide="name"></i>` + `lucide.createIcons()`. Não desenhar SVG à mão; não usar emoji/unicode como ícone.
+- Sem gradientes decorativos, sem padrões densos. Única superfície rica: bloco de total no dashboard em teal escuro.
+
+### Vocabulário semântico
+
+Manter esses termos consistentes em templates, variáveis Python e comentários:
+
+- **Status da dívida:** `cadastrada · em_atraso · com_proposta · negociando · acordo_ativo · paga · arquivada`
+- **Prioridade:** `resolver · negociar · acompanhar · esperar`
+- **Situação financeira:** `safe · warning · critical` (implementado em `rules.py`)
+- **Tom de feedback:** `safe · attention · caution · critical · info`
+
+### Acessibilidade (inegociável)
+
+Contraste AA em texto · touch targets ≥44px · significado nunca apenas por cor · focus ring visível · `prefers-reduced-motion` respeitado · linguagem simples · uma ação primária clara por tela · modo discreto mascara valores (`R$ ••••`) e nomes de credores.
+
+---
 
 ## Arquivos residuais (ignorar)
 
