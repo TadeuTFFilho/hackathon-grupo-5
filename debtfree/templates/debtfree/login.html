@@ -1,0 +1,41 @@
+{% extends "debtfree/base.html" %}
+{% block title %}DebtFree AI — Entrar{% endblock %}
+
+{% block content %}
+<div class="max-w-sm mx-auto py-10">
+  <h2 class="text-3xl font-bold mb-1 text-center">Entrar</h2>
+  <p class="text-gray-500 text-sm text-center mb-8">Acesse sua conta para ver sua análise</p>
+
+  {% if error %}
+  <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6 text-sm">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="POST" class="card space-y-4">
+    {% csrf_token %}
+
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">CPF</label>
+      <input type="text" name="cpf" placeholder="123.456.789-00" required
+             class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm" />
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-600 mb-1">Senha</label>
+      <input type="password" name="password" placeholder="••••••••" required
+             class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm" />
+    </div>
+
+    <button type="submit" class="w-full btn-primary py-3 text-base">Entrar</button>
+  </form>
+
+  {# Atalho para demo — Flora: pode esconder em produção #}
+  <div class="mt-6 card bg-blue-50 border border-blue-200 text-sm">
+    <p class="font-medium text-blue-800 mb-2">🧪 Contas de demo</p>
+    <p class="text-blue-700">CPF: <code>123.456.789-00</code> — João (crítico)</p>
+    <p class="text-blue-700">CPF: <code>987.654.321-00</code> — Ana (atenção)</p>
+    <p class="text-blue-500 text-xs mt-1">Senha para ambos: <code>senha123</code></p>
+  </div>
+</div>
+{% endblock %}

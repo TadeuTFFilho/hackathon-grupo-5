@@ -4,7 +4,43 @@ from django.views.decorators.http import require_http_methods
 
 from .rules import enrich, prioritize, classify_situation
 from .claude_service import analyze_debts, generate_letter
-from .mock_data import MOCK_SESSION
+from .mock_data import MOCK_USERS, MOCK_DEBT_DATA, get_user_by_cpf
+from .auth import login_required
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+def login_view(request):
+    if request.session.get("user"):
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        cpf      = request.POST.get("cpf", "").strip()
+        password = request.POST.get("password", "").strip()
+
+        user = get_user_by_cpf(cpf)
+        if user and user["password"] == password:
+            # Salva dados não-sensíveis na sessão (sem senha)
+            request.session["user"] = {
+                "cpf":       user["cpf"],
+                "name":      user["name"],
+                "email":     user["email"],
+                "phone":     user["phone"],
+                "birthdate": user["birthdate"],
+                "address":   user["address"],
+            }
+            return redirect("dashboard")
+
+        return render(request, "debtfree/login.html", {"error": "CPF ou senha incorretos."})
+
+    return render(request, "debtfree/login.html")
+
+
+def logout_view(request):
+    request.session.flush()
+    return redirect("login")
+
 
 # ---------------------------------------------------------------------------
 # Bia — fluxo de entrada
@@ -14,19 +50,21 @@ def home(request):
     return render(request, "debtfree/home.html")
 
 
+@login_required
 def onboarding(request):
-    return render(request, "debtfree/onboarding.html")
+    user = request.session["user"]
+    return render(request, "debtfree/onboarding.html", {"user": user})
 
 
+@login_required
 @require_http_methods(["POST"])
 def analyze(request):
     """
-    Recebe o formulário de dívidas, salva na sessão e redireciona ao dashboard.
+    Recebe o formulário, salva na sessão e redireciona ao dashboard.
     TODO (Luis): substituir mock por chamada real à IA.
     """
     try:
         monthly_income = float(request.POST.get("monthly_income", 0))
-        user_name = request.POST.get("user_name", "")
 
         creditors        = request.POST.getlist("creditor")
         types            = request.POST.getlist("type")
@@ -48,80 +86,115 @@ def analyze(request):
 
         if not monthly_income or not debts:
             return render(request, "debtfree/onboarding.html",
-                          {"error": "Preencha a renda e ao menos uma dívida."})
+                          {"error": "Preencha a renda e ao menos uma dívida.", "user": request.session["user"]})
 
-        enriched   = enrich(debts)
-        situation  = classify_situation(monthly_income, enriched)
+        enriched    = enrich(debts)
+        situation   = classify_situation(monthly_income, enriched)
         prioritized = prioritize(enriched)
-
-        # Adiciona id para referência nas URLs
         for i, d in enumerate(prioritized):
             d["id"] = i
 
-        # Salva na sessão para as próximas telas
         request.session["debt_data"] = {
-            "user_name":      user_name,
             "monthly_income": monthly_income,
             "situation":      situation,
             "prioritized":    prioritized,
-            "analysis":       None,   # preenchido após chamada à IA (Luis)
+            "analysis":       None,  # Luis preenche aqui
         }
 
         return redirect("dashboard")
 
     except Exception as e:
-        return render(request, "debtfree/onboarding.html", {"error": str(e)})
+        return render(request, "debtfree/onboarding.html",
+                      {"error": str(e), "user": request.session.get("user")})
 
 
 # ---------------------------------------------------------------------------
 # Tadeu — resultados e ação
 # ---------------------------------------------------------------------------
 
-def _get_session_data(request):
+def _get_debt_data(request):
     """
-    Retorna os dados da sessão ou o mock enquanto a integração não está pronta.
-    Quando Luis integrar a IA, remover o fallback para MOCK_SESSION.
+    Prioridade: dados da sessão → mock do usuário logado → mock padrão do João.
+    Remove quando Luis integrar a IA.
     """
-    return request.session.get("debt_data") or MOCK_SESSION
+    if request.session.get("debt_data"):
+        return request.session["debt_data"]
+
+    user = request.session.get("user")
+    if user:
+        cpf = user.get("cpf")
+        if cpf in MOCK_DEBT_DATA:
+            return MOCK_DEBT_DATA[cpf]
+
+    # Fallback: João (demo sem login)
+    return MOCK_DEBT_DATA["123.456.789-00"]
 
 
+@login_required
 def dashboard(request):
-    """Ranking de prioridades + resumo + plano de ação."""
-    data = _get_session_data(request)
-    return render(request, "debtfree/dashboard.html", data)
+    user      = request.session["user"]
+    debt_data = _get_debt_data(request)
+    return render(request, "debtfree/dashboard.html", {**debt_data, "user": user})
 
 
+@login_required
 def legal(request):
-    """Explicação da situação jurídica e direitos pela Lei 14.181/2021."""
-    data = _get_session_data(request)
-    prescribed = [d for d in data["prioritized"] if d.get("is_prescribed")]
-    return render(request, "debtfree/legal.html", {**data, "prescribed_debts": prescribed})
+    user      = request.session["user"]
+    debt_data = _get_debt_data(request)
+    prescribed = [d for d in debt_data["prioritized"] if d.get("is_prescribed")]
+    return render(request, "debtfree/legal.html", {**debt_data, "user": user, "prescribed_debts": prescribed})
 
 
+@login_required
 def letter(request, debt_index):
-    """Exibe a carta de negociação para a dívida selecionada."""
-    data = _get_session_data(request)
+    user      = request.session["user"]
+    debt_data = _get_debt_data(request)
 
     try:
-        debt = data["prioritized"][debt_index]
+        debt = debt_data["prioritized"][debt_index]
     except IndexError:
         return redirect("dashboard")
 
+    address = user.get("address", {})
+    address_str = (
+        f"{address.get('street', '')}, {address.get('neighborhood', '')} — "
+        f"{address.get('city', '')}/{address.get('state', '')} — CEP {address.get('zip', '')}"
+    )
+
     # TODO (Luis): substituir pelo texto gerado pela IA
-    mock_letter = f"""Prezados Senhores,
+    mock_letter = f"""{address.get('city', 'São Paulo')}, {_today_br()}
 
-Eu, {data['user_name'] or 'o(a) devedor(a)'}, portador(a) de documentos a apresentar, venho por meio desta carta manifestar meu interesse em regularizar a dívida referente ao contrato com {debt['creditor']}, no valor original de R$ {debt['total_amount']}.
+{debt['creditor']}
+A/C Departamento de Cobranças
 
-Em razão das dificuldades financeiras que enfrento atualmente, com renda mensal de R$ {data['monthly_income']}, e amparado(a) pela Lei 14.181/2021 (Lei do Superendividamento), solicito a análise de proposta de quitação com desconto de 50% sobre o valor total (R$ {debt['total_amount'] * 0.5:.2f}), ou alternativamente o parcelamento do saldo devedor com juros máximos de 12% ao ano.
+Assunto: Proposta de Renegociação de Dívida
 
-Estou disponível para negociação e aguardo retorno para formalização do acordo. Agradeço a atenção e coloco-me à disposição para quaisquer esclarecimentos.
+Prezados Senhores,
+
+Eu, {user['name']}, CPF {user['cpf']}, residente à {address_str}, venho por meio desta carta manifestar meu interesse em regularizar a dívida referente ao contrato com {debt['creditor']}, no valor de R$ {debt['total_amount']:.2f}.
+
+Em razão das dificuldades financeiras que enfrento atualmente, com renda mensal de R$ {debt_data['monthly_income']:.2f}, e amparado(a) pela Lei 14.181/2021 (Lei do Superendividamento), solicito a análise da seguinte proposta: quitação com desconto de 50% sobre o valor total (R$ {debt['total_amount'] * 0.5:.2f}), ou alternativamente o parcelamento do saldo devedor em até 24 vezes com juros máximos de 12% ao ano.
+
+Estou disponível para negociação pelo telefone {user['phone']} ou e-mail {user['email']}. Aguardo retorno para formalização do acordo.
 
 Atenciosamente,
-{data['user_name'] or 'Devedor(a)'}"""
+{user['name']}
+CPF: {user['cpf']}
+Telefone: {user['phone']}"""
 
     return render(request, "debtfree/letter.html", {
-        "debt":          debt,
-        "letter":        mock_letter,
-        "user_name":     data["user_name"],
-        "monthly_income": data["monthly_income"],
+        "debt":           debt,
+        "letter":         mock_letter,
+        "user":           user,
+        "monthly_income": debt_data["monthly_income"],
     })
+
+
+def _today_br():
+    from datetime import date
+    months = [
+        "", "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+    ]
+    d = date.today()
+    return f"{d.day} de {months[d.month]} de {d.year}"

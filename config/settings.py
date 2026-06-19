@@ -37,6 +37,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "debtfree.context_processors.current_user",
             ],
         },
     },

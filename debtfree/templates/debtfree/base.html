@@ -47,9 +47,15 @@
 </head>
 <body class="bg-gray-50 min-h-screen font-sans text-gray-900">
 
-  <nav class="bg-white border-b border-gray-200 px-6 py-4">
+  <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
     {# Flora: substituir por header completo com logo e navegação #}
     <a href="/" class="text-xl font-bold text-blue-600">💸 DebtFree AI</a>
+    {% if current_user %}
+    <div class="flex items-center gap-4 text-sm">
+      <span class="text-gray-500">{{ current_user.name }}</span>
+      <a href="/logout/" class="text-gray-400 hover:text-gray-600">Sair</a>
+    </div>
+    {% endif %}
   </nav>
 
   <main class="max-w-3xl mx-auto px-4 py-10">
