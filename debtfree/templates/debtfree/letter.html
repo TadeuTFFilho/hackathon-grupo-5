@@ -1,0 +1,47 @@
+{% extends "debtfree/base.html" %}
+{% block title %}DebtFree AI — Carta de Negociação{% endblock %}
+
+{% block content %}
+
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <a href="/dashboard/" class="text-sm text-gray-400 hover:text-gray-600">← Voltar ao dashboard</a>
+    <h2 class="text-2xl font-bold mt-1">Carta de Negociação</h2>
+    <p class="text-gray-500 text-sm">{{ debt.creditor }} — R$ {{ debt.total_amount }}</p>
+  </div>
+
+  {# Ações — Flora: posicionar e estilizar #}
+  <div class="flex gap-2">
+    <button onclick="copyLetter()" class="btn-ghost">Copiar texto</button>
+    <button onclick="window.print()" class="btn-primary">Salvar PDF</button>
+  </div>
+</div>
+
+{# ── Carta ── #}
+<section class="card mb-6">
+  {# Flora: definir tipografia adequada para carta formal #}
+  <div id="letter-content" class="whitespace-pre-line leading-relaxed text-gray-800">{{ letter }}</div>
+</section>
+
+{# ── Aviso legal ── #}
+<p class="text-xs text-gray-400 text-center mb-6">
+  Esta carta foi gerada por IA com base nos seus dados. Revise antes de enviar.
+  Para situações complexas, consulte um advogado ou a Defensoria Pública.
+</p>
+
+{# ── Próximo passo ── #}
+<div class="card text-center">
+  <p class="text-gray-600 text-sm mb-3">Quer negociar outra dívida?</p>
+  <a href="/dashboard/" class="btn-secondary">Ver todas as dívidas</a>
+</div>
+
+<script>
+function copyLetter() {
+  const text = document.getElementById('letter-content').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('Carta copiada para a área de transferência!');
+  });
+}
+</script>
+
+{% endblock %}

@@ -4,44 +4,64 @@ Assistente de IA para superendividados: prioriza dívidas, explica direitos pela
 
 ## Time
 
-| Nome  | Papel              |
-|-------|--------------------|
-| Flora | Designer + Conteúdo IA |
-| Bia   | Dev Frontend       |
-| Tadeu | Dev Frontend       |
-| Luis  | Dev Backend + IA   |
-| José  | QA + Demo          |
+| Nome  | Papel                    |
+|-------|--------------------------|
+| Flora | Designer + Conteúdo IA   |
+| Bia   | Dev Frontend (templates) |
+| Tadeu | Dev Frontend (templates) |
+| Luis  | Dev Backend + IA         |
+| José  | QA + Demo                |
+
+## Stack
+
+**Uma base só:** Django 5 + Django Templates + Claude API
 
 ## Estrutura
 
 ```
 hackathon-grupo-5/
-├── frontend/       → Next.js (Bia + Tadeu)
-├── backend/        → Node.js + Express + Claude API (Luis)
-├── design/         → Personas, assets, copy (Flora)
-├── qa/             → Casos de teste e roteiro de demo (José)
-└── docs/           → Regras de negócio e decisões técnicas
+├── manage.py
+├── requirements.txt
+├── .env.example
+├── config/               → settings, urls, wsgi
+└── debtfree/             → app principal
+    ├── rules.py          → priorização de dívidas (Lei 14.181/2021)
+    ├── claude_service.py → integração com Claude API
+    ├── views.py          → home, onboarding, analyze, letter
+    ├── urls.py
+    └── templates/debtfree/
+        ├── base.html
+        ├── home.html
+        ├── onboarding.html   → formulário de dívidas
+        ├── dashboard.html    → análise + ranking + plano de ação
+        ├── letter.html       → carta de negociação
+        └── partials/
+            └── debt_row.html
 ```
 
 ## Como rodar
 
-### Backend
 ```bash
-cd backend
-cp .env.example .env   # adicionar ANTHROPIC_API_KEY
-npm install
-npm run dev
+# 1. Instalar dependências
+pip install -r requirements.txt
+
+# 2. Configurar variáveis
+cp .env.example .env
+# editar .env e adicionar ANTHROPIC_API_KEY
+
+# 3. Rodar
+python manage.py runserver
 ```
 
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Acesse: http://localhost:8000
+
+## Fluxo do usuário
+
+1. **Home** → CTA para começar
+2. **Onboarding** → preenche renda + dívidas
+3. **Dashboard** → situação (verde/amarelo/vermelho), ranking de prioridades, plano de ação, direitos legais
+4. **Carta** → gera carta de negociação personalizada para qualquer dívida
 
 ## Problema que resolvemos
 
 Brasil tem ~70 milhões de inadimplentes. A maioria não sabe por onde começar, quais dívidas priorizar ou quais direitos tem pela [Lei 14.181/2021](https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14181.htm).
-
-**DebtFree AI** recebe as dívidas do usuário, analisa a situação, prioriza o que pagar primeiro e gera uma carta de negociação personalizada — tudo com IA.

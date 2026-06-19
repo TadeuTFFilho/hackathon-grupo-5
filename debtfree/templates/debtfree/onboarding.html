@@ -1,0 +1,63 @@
+{% extends "debtfree/base.html" %}
+{% block title %}DebtFree AI — Cadastro{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-bold mb-2">Suas dívidas</h2>
+<p class="text-gray-500 mb-8">Preencha seus dados para receber a análise personalizada.</p>
+
+{% if error %}
+<div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6">{{ error }}</div>
+{% endif %}
+
+<form action="/analyze/" method="POST">
+  {% csrf_token %}
+
+  <!-- Dados pessoais -->
+  <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
+    <h3 class="font-semibold text-lg mb-4">Dados gerais</h3>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Seu nome</label>
+        <input type="text" name="user_name" placeholder="João Silva"
+               class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+      </div>
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Renda mensal (R$) *</label>
+        <input type="number" name="monthly_income" placeholder="3000" required min="1" step="0.01"
+               class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Dívidas -->
+  <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
+    <h3 class="font-semibold text-lg mb-4">Suas dívidas</h3>
+    <div id="debts-container">
+      {% include "debtfree/partials/debt_row.html" %}
+    </div>
+    <button type="button" onclick="addDebt()"
+            class="mt-4 text-blue-600 font-medium text-sm hover:underline">
+      + Adicionar dívida
+    </button>
+  </div>
+
+  <button type="submit"
+          class="w-full bg-blue-600 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition">
+    Analisar minhas dívidas
+  </button>
+</form>
+
+<template id="debt-row-template">
+  {% include "debtfree/partials/debt_row.html" %}
+</template>
+
+<script>
+function addDebt() {
+  const container = document.getElementById('debts-container');
+  const template = document.getElementById('debt-row-template').innerHTML;
+  const div = document.createElement('div');
+  div.innerHTML = template;
+  container.appendChild(div.firstElementChild);
+}
+</script>
+{% endblock %}

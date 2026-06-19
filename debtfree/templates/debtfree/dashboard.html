@@ -1,0 +1,94 @@
+{% extends "debtfree/base.html" %}
+{% block title %}DebtFree AI — Sua análise{% endblock %}
+
+{% block content %}
+
+{# ── Cabeçalho ── #}
+<div class="mb-6">
+  <h2 class="text-3xl font-bold">
+    {% if user_name %}Olá, {{ user_name }}{% else %}Sua análise{% endif %}
+  </h2>
+  <p class="text-gray-500 text-sm mt-1">Renda mensal: R$ {{ monthly_income }}</p>
+
+  {# Badge de situação — Flora: personalizar cores e estilo #}
+  <div class="mt-3">
+    {% if situation.level == "safe" %}
+      <span class="situation-badge bg-green-100 text-green-800">✅ {{ situation.label }}</span>
+    {% elif situation.level == "warning" %}
+      <span class="situation-badge bg-yellow-100 text-yellow-800">⚠️ {{ situation.label }}</span>
+    {% else %}
+      <span class="situation-badge bg-red-100 text-red-800">🚨 {{ situation.label }}</span>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Resumo da IA ── #}
+{% if analysis.summary %}
+<section class="card mb-6">
+  <h3 class="section-title">Resumo</h3>
+  <p class="text-gray-600">{{ analysis.summary }}</p>
+</section>
+{% endif %}
+
+{# ── Ranking de dívidas ── #}
+<section class="card mb-6">
+  <h3 class="section-title">Pague nessa ordem 👇</h3>
+
+  <div class="space-y-3 mt-4">
+    {% for debt in prioritized %}
+    <div class="debt-row
+      {% if forloop.counter == 1 %}debt-row--urgent
+      {% elif forloop.counter == 2 %}debt-row--high
+      {% else %}debt-row--normal{% endif %}">
+
+      {# Número de ordem #}
+      <div class="debt-rank">{{ forloop.counter }}</div>
+
+      {# Info da dívida #}
+      <div class="debt-info">
+        <span class="debt-creditor">{{ debt.creditor }}</span>
+        <span class="debt-type">{{ debt.type_label }}</span>
+        {% if debt.is_prescribed %}
+          <span class="badge-prescribed">pode estar prescrita</span>
+        {% endif %}
+      </div>
+
+      {# Valor + ações #}
+      <div class="debt-actions">
+        <span class="debt-amount">R$ {{ debt.total_amount }}</span>
+        <div class="flex gap-2 mt-1">
+          <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost">Gerar carta</a>
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ── Plano de ação ── #}
+{% if analysis.action_plan %}
+<section class="card mb-6">
+  <h3 class="section-title">Plano de ação</h3>
+  <div class="space-y-4 mt-4">
+    {% for item in analysis.action_plan %}
+    <div class="action-step">
+      <div class="action-number">{{ item.step }}</div>
+      <div>
+        <p class="font-medium">{{ item.action }}</p>
+        <p class="text-sm text-gray-500">{{ item.reason }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{# ── Link para direitos jurídicos ── #}
+<div class="text-center">
+  <a href="/dashboard/legal/" class="btn-secondary">
+    ⚖️ Ver meus direitos pela Lei 14.181/2021
+  </a>
+</div>
+
+{% endblock %}
