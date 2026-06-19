@@ -1,81 +1,149 @@
-# CLAUDE.md — Passo Design System
+# CLAUDE.md
 
-> This is the **Passo design system project** (it has `_ds_manifest.json` at root). You are *authoring* the system here, not consuming it. The compiler regenerates `_ds_bundle.js`, `_ds_manifest.json`, and `_adherence.oxlintrc.json` on every turn — **never write those files by hand.** After editing sources, run `check_design_system` and fix what it reports.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Full design guide & manifest: **`readme.md`**. Downloadable Agent-Skill front matter: **`SKILL.md`**. This file is the quick orientation that loads into every conversation.
+## Project
 
----
+**DebtFree AI** (nome de trabalho: **Passo**) — assistente de IA para superendividados brasileiros. Prioriza dívidas, explica direitos pela Lei 14.181/2021 e gera cartas de negociação personalizadas. Projeto de hackathon do Grupo 5 (Orla Tech).
 
-## What Passo is
+> "Passo" é o nome de marca em desenvolvimento. O produto deve sentir como **uma pausa segura no meio da pressão** — nunca um banco, uma cobradora ou uma promessa milagrosa.
 
-A calm, mobile-first product for Brazilians dealing with debt / *superendividamento*. It helps people organize debts, understand priorities, simulate negotiation offers, and learn their rights — to take **the next possible step** without compromising essentials. It must feel like **a safe pause in the middle of pressure** — never a bank, a debt collector, or a miracle promise.
-
-> "Passo" is a **working name** (final naming is a later step per the brief). Built entirely from the written brand brief — there is no upstream codebase or Figma. Persona: **Mariana**, 38, Guarulhos, ~R$2.800/mo, multiple debts, solves things on her phone, fears accepting an offer she can't keep.
+**Persona central:** Mariana, 38 anos, Guarulhos, ~R$2.800/mês, múltiplas dívidas, resolve tudo pelo celular, tem medo de aceitar uma proposta que não vai conseguir cumprir.
 
 ---
 
-## Voice & content rules (as important as the visuals)
+## Stack
 
-- Tone: **calma, direta, acolhedora, didática, transparente, não julgadora.** Lower anxiety; never shame.
-- Address the user as **"você"**; speak *with* them — use **"vamos"**. Never cobrança imperative.
-- **Sentence case** everywhere (titles, buttons, labels). UPPERCASE only on tiny eyebrow labels.
-- **No emoji** in UI/copy. Icons do the visual work.
-- Money is BRL: `R$ 1.240,90` (comma decimal, dot thousands), tabular numerals.
-- Errors **guide** ("Você pode revisar antes de salvar"), never scold. Every recommendation answers **"por que estou vendo isso?"**. The AI's reading is always **correctable** before saving.
-- Prefer plain words: "Valor total" (not *saldo consolidado*), "Dívida em atraso" (not *inadimplência ativa*), "Parcela que cabe no mês" (not *capacidade de pagamento*), "Gastos essenciais" (not *mínimo existencial*).
-- Avoid: "Você está devendo" · "Sua situação é grave" · "Regularize imediatamente" · "Limpe seu nome agora" · "Oferta imperdível / Última chance".
-- Always keep the disclaimer available: *"Esta ferramenta oferece orientação informativa e não substitui apoio jurídico ou financeiro especializado."*
+Single Django 5 app — sem frontend separado. Django Templates com Tailwind via CDN. Claude API (Anthropic) para análise e geração de cartas. BCB API pública para taxas de juros em tempo real.
+
+## Commands
+
+```bash
+# Setup
+pip3 install -r requirements.txt
+cp .env.example .env        # adicionar ANTHROPIC_API_KEY
+
+# Rodar
+python3 manage.py runserver  # http://localhost:8000
+
+# Não há banco de dados — sem necessidade de migrate
+# Sessions usam signed_cookies (SESSION_ENGINE)
+```
+
+## Architecture
+
+Toda a lógica está em `debtfree/`. Não há models Django — nenhum banco de dados é usado.
+
+**Fluxo de dados:**
+1. `login_view` autentica via `mock_data.MOCK_USERS` (CPF + senha) e salva o usuário na sessão
+2. `analyze` recebe o formulário, passa por `rules.py` (enrich → classify → prioritize) e salva em `request.session["debt_data"]`
+3. `dashboard` lê a sessão, enriquece cada dívida com `financial_service.amortization_tip()`, busca taxas BCB via `financial_service.get_market_rates()`, e passa tudo para o template
+
+**`_get_debt_data(request)` — fonte de dados para o dashboard:**
+Prioridade: `session["debt_data"]` → `MOCK_DEBT_DATA[cpf]` → fallback para João (CPF `123.456.789-00`). Remove esse fallback quando Luis integrar a IA no `analyze`.
+
+**Módulos principais:**
+
+- `debtfree/rules.py` — priorização de dívidas (PRIORITY_ORDER), classificação da situação financeira (safe/warning/critical), enriquecimento com `type_label` e `is_prescribed`
+- `debtfree/financial_service.py` — BCB API (séries SGS), cálculos de amortização, `financial_summary`, `amortization_tip` por dívida, `prescription_detail` com data exata
+- `debtfree/claude_service.py` — `analyze_debts()` e `generate_letter()` via Anthropic SDK. Cliente criado lazy via `get_client()` para não exigir API key no boot
+- `debtfree/mock_data.py` — `MOCK_USERS` e `MOCK_DEBT_DATA` indexados por CPF. 4 perfis: João (`123.456.789-00`, crítico), Ana (`987.654.321-00`, atenção), Carlos (`000.000.001-00`, controlado), Maria (`000.000.002-00`, prescrita). Senha: `senha123`
+- `debtfree/auth.py` — decorator `@login_required` que redireciona para `/login/`
+- `debtfree/context_processors.py` — injeta `current_user` em todos os templates
+
+**Templates:** `base.html` define todas as classes semânticas (`.card`, `.debt-row--urgent`, `.btn-primary`, etc.) num bloco `<style>` centralizado — mudar lá afeta todas as telas.
+
+**Rotas:**
+```
+/               home
+/login/         login (CPF + senha)
+/logout/        flush de sessão
+/onboarding/    formulário de dívidas
+/analyze/       POST — processa formulário e salva na sessão
+/dashboard/     análise principal (login obrigatório)
+/dashboard/legal/          direitos Lei 14.181/2021
+/dashboard/letter/<int>/   carta de negociação por índice da dívida
+```
+
+## Business Rules
+
+Definidas em `docs/business-rules.md` e implementadas em `rules.py`:
+
+- **Prioridade de pagamento:** pensão > aluguel > serviços essenciais > financiamento com garantia > empréstimo bancário > cartão > loja
+- **Situação financeira:** ≤30% da renda = controlado, 31–50% = atenção, >50% = superendividado
+- **Prescrição:** dívidas com mais de 5 anos do vencimento não podem ser cobradas judicialmente
+- **Lei 14.181/2021:** repactuação judicial em até 5 anos, proteção do mínimo existencial (1 salário mínimo)
+
+## BCB API (Banco Central)
+
+`financial_service._fetch_bcb()` consome `api.bcb.gov.br/dados/serie/bcdata.sgs.{id}/dados/ultimos/1`. Timeout de 3s com fallback hardcoded. Séries usadas: 432 (SELIC meta), 20714 (juros cartão), 20754 (juros empréstimo pessoal).
+
+## TODOs ativos no código
+
+- `views.analyze` — `analysis: None` precisa ser substituído por `claude_service.analyze_debts()` quando Luis integrar
+- `views.letter` — carta mockada precisa ser substituída por `claude_service.generate_letter()`
+- `financial_service.get_market_rates()` — sem cache; em produção, adicionar `django.core.cache`
+- **Pendente visual:** paleta atual usa Tailwind blue-600; direção de marca é teal `#2C8377` — migrar quando houver tempo
+
+## design/ — Copy e Personas
+
+- `design/copy/ui-copy.md` — microcopy oficial de toda a UI. Tom: empático, simples e encorajador. Usar esses textos nos templates — não inventar copy alternativo.
+- `design/copy/legal-disclaimer.md` — disclaimers legais obrigatórios em três versões: curta (rodapé), média (abaixo da análise) e prescrição (quando `is_prescribed` for verdadeiro). Exibir conforme o contexto.
+- `design/personas/personas.md` — 4 personas para demo e testes: Carlos (🟢 controlado), Ana (🟡 atenção, risco despejo), João (🔴 superendividado crítico), Maria (🟢 dívida prescrita — edge case). Todos têm equivalente em `mock_data.py`.
+
+## backend/src/services/claudeService.js
+
+Implementação Node.js da integração com Claude — **ativa**, não residual. Contém:
+- `analyzeDebts({ monthlyIncome, debts, prioritized, situation })` — retorna JSON com `summary`, `legalRights`, `actionPlan` (3 passos) e `negotiationTip`
+- `generateNegotiationLetter({ debt, monthlyIncome, userName })` — retorna texto da carta de negociação
+- Modelo: `claude-opus-4-8`. System prompt compartilhado define persona empática e limites (orientação educativa, não consultoria jurídica).
+- `parseJsonResponse()` — extrai JSON resiliente (remove markdown fences se presentes).
+
+A versão Python equivalente está em `debtfree/claude_service.py`. Os prompts canônicos vivem no arquivo JS — ao ajustar tom ou estrutura de resposta, manter os dois em sincronia.
 
 ---
 
-## Visual foundations
+## Brand & Design Foundations (Passo)
 
-- **Color** — primary calm teal `--color-primary` = `--teal-500` `#2C8377` (verde azulado; **not** bank-blue). Secondary warm sand/peach (`--sand-*`). Warm-gray neutrals (`--warm-*`) — page is `--warm-50`, cards white. Semantic ladder `safe→attention→caution→critical→info`; **red is rare and never a dominant surface**. **Meaning is never carried by color alone** — always pair with icon + label.
-- **Type** — one family, **Plus Jakarta Sans** (loaded via Google Fonts in `tokens/fonts.css`; needs self-hosted `.woff2` for production). Mobile-first scale; body ≥14px, labels ≥12px. Money/numbers use `font-variant-numeric: tabular-nums`.
-- **Space** — 4px base. Mobile gutter 20px, card padding 16px, section gap 28px, card gap 12px. Touch targets ≥44px.
-- **Radius/elevation** — gently rounded (cards 14px, inputs 10px, sheets 24px, buttons/chips pill). Soft warm-tinted shadows or a hairline border. No hard fintech shadows.
-- **Motion** — calm: 120–320ms, soft easing, gentle fades/slides, press scale 0.98. No bounce, no looping/pulsing decoration. Respect `prefers-reduced-motion`.
-- **Icons** — **Lucide** (rounded 2px line), via CDN, rendered `<i data-lucide="name"></i>` + `lucide.createIcons()`. Never hand-draw SVG icons; no emoji/unicode glyphs.
-- **No decorative gradients**, no busy patterns. The one rich surface is the dashboard total block in `--teal-700`.
+Regras de voz e visual que se aplicam a qualquer tela do produto, independente da stack.
 
----
+### Voz e conteúdo
 
-## How the project is built
+- Tom: **calma, direta, acolhedora, didática, transparente, não julgadora.** Reduz ansiedade; nunca envergonha.
+- Tratar o usuário como **"você"**; falar *com* ele — usar **"vamos"**. Nunca imperativo de cobrança.
+- **Sentence case** em tudo (títulos, botões, labels). MAIÚSCULAS apenas em eyebrow labels pequenos.
+- **Sem emoji na UI/copy.** Ícones fazem o trabalho visual. *(Nota: versão atual ainda usa emoji — migrar para Lucide progressivamente.)*
+- Dinheiro em BRL: `R$ 1.240,90` (vírgula decimal, ponto milhar), numerais tabulares.
+- Erros **orientam** ("Você pode revisar antes de salvar"), nunca repreendem. Toda recomendação responde **"por que estou vendo isso?"**.
+- Preferir palavras simples: "Valor total" (não *saldo consolidado*), "Dívida em atraso" (não *inadimplência ativa*), "Parcela que cabe no mês" (não *capacidade de pagamento*), "Gastos essenciais" (não *mínimo existencial*).
+- **Evitar:** "Você está devendo" · "Sua situação é grave" · "Regularize imediatamente" · "Limpe seu nome agora" · "Oferta imperdível / Última chance".
+- Disclaimer sempre disponível: *"Esta ferramenta oferece orientação informativa e não substitui apoio jurídico ou financeiro especializado."*
 
-- **`styles.css`** (root) is the single entry point — only `@import`s. It reaches `tokens/colors.css · typography.css · spacing.css · radius.css · motion.css · fonts.css`. Tokens are base values + semantic aliases (`--color-primary`, `--text-body`, `--surface-card`, `--safe-bg`, …).
-- **Components** live in `components/<group>/` as React (`Name.jsx` + sibling `Name.d.ts` + `Name.prompt.md`), one `@dsCard` HTML per directory. Groups: `core/` (Button, IconButton, Badge, Tag) · `forms/` (Input, MoneyInput, Textarea, Select, Checkbox, Radio, Switch, Stepper) · `feedback/` (Alert, Toast, EmptyState, Sheet) · `finance/` (MoneyValue, StatusPill, PriorityTag, CommitmentBar, DebtCard, SimulationVerdict) · `ai/` (ExtractionCard, WhyExplained, Disclaimer) · `navigation/` (TopBar, BottomNav) · `educational/` (Accordion).
-- **Consume components** from the compiled bundle: `const { Button, DebtCard } = window.PassoDesignSystem_3d94f8`. Load `_ds_bundle.js` via `<script src>` — never `<script src>` a `.jsx` directly. Read each component's `.prompt.md` for usage.
-- **`guidelines/*.card.html`** — foundation specimen cards (Colors, Type, Spacing, Brand) shown in the Design System tab.
-- **`ui_kits/app/`** — the interactive reference app: `index.html` + `ScreensOnboarding.jsx` (welcome → goal → income → add-debt) + `ScreensApp.jsx` (dashboard hub, list, detail, simulation, result, plan, educational, profile) + `App.jsx` (shell/routing/phone frame) + `tweaks-panel.jsx` + `data.js`. Copy its patterns for new screens.
-- **`assets/`** — `logo.svg`, `logomark.svg`, `logo-on-dark.svg` (the "próximo passo" ascending-path mark).
+### Fundações visuais
 
-### UI-kit gotchas (learned)
-- **Lucide icons inside React**: render each via the self-contained `LIcon` helper (`window.PassoUI.LIcon`) that owns its own `<i>` through `innerHTML` — do **not** drop `<i data-lucide>` straight into JSX and rely on a global `createIcons()`; React reconciliation fights the swapped-in `<svg>`.
-- **Screen layout**: use the shared `Screen` wrapper (`window.PassoUI.Screen`) — scrollable content + **fixed bottom action footer** so the primary CTA stays pinned.
-- The app's navigation has two modes exposed as a **Tweak** (`navMode`: `tabbar` 3-item Início/Dívidas/Perfil, or `fluid` no-tabbar). Settings live in the **Perfil** tab (incl. logout, discreet mode), not a top-bar gear.
+- **Cor** — primária: teal calmo `#2C8377` (verde azulado; **não** azul de banco). Secundária: areia/pêssego quente. Neutros warm-gray. Escada semântica `safe → attention → caution → critical → info`; **vermelho é raro e nunca superfície dominante**. Significado nunca por cor sozinha — sempre par ícone + label.
+- **Tipografia** — uma família: **Plus Jakarta Sans**. Mobile-first; corpo ≥14px, labels ≥12px. Valores monetários com `font-variant-numeric: tabular-nums`.
+- **Espaçamento** — base 4px. Gutter mobile 20px, padding card 16px, gap de seção 28px, gap entre cards 12px. Touch targets ≥44px.
+- **Raio/elevação** — arredondado suave (cards 14px, inputs 10px, sheets 24px, botões pill). Sombra warm-tinted suave ou borda hairline. Sem sombras duras estilo fintech.
+- **Movimento** — calmo: 120–320ms, easing suave, fades/slides gentis, press scale 0.98. Sem bounce, sem decoração em loop. Respeitar `prefers-reduced-motion`.
+- **Ícones** — **Lucide** (linha 2px arredondada), via CDN: `<i data-lucide="name"></i>` + `lucide.createIcons()`. Não desenhar SVG à mão; não usar emoji/unicode como ícone.
+- Sem gradientes decorativos, sem padrões densos. Única superfície rica: bloco de total no dashboard em teal escuro.
 
----
+### Vocabulário semântico
 
-## Semantic vocabulary (keep names consistent)
+Manter esses termos consistentes em templates, variáveis Python e comentários:
 
-- **Debt status** (`StatusPill`): `cadastrada · em_atraso · com_proposta · negociando · acordo_ativo · paga · arquivada`
-- **Priority** (`PriorityTag`): `resolver · negociar · acompanhar · esperar`
-- **Simulation verdict** (`SimulationVerdict`): `safe · tight · not_advised`
-- **Tones**: `safe · attention · caution · critical · info`
+- **Status da dívida:** `cadastrada · em_atraso · com_proposta · negociando · acordo_ativo · paga · arquivada`
+- **Prioridade:** `resolver · negociar · acompanhar · esperar`
+- **Situação financeira:** `safe · warning · critical` (implementado em `rules.py`)
+- **Tom de feedback:** `safe · attention · caution · critical · info`
 
----
+### Acessibilidade (inegociável)
 
-## Accessibility (non-negotiable)
-
-AA text contrast · 44px+ touch targets · meaning never by color alone · visible focus ring · `prefers-reduced-motion` honored · plain language · one clear primary action per screen · discreet mode masks values (`R$ ••••`) and creditor names.
+Contraste AA em texto · touch targets ≥44px · significado nunca apenas por cor · focus ring visível · `prefers-reduced-motion` respeitado · linguagem simples · uma ação primária clara por tela · modo discreto mascara valores (`R$ ••••`) e nomes de credores.
 
 ---
 
-## Workflow when editing
+## Arquivos residuais (ignorar)
 
-1. Make changes in the source files (tokens / components / cards / ui kit).
-2. Run **`check_design_system`** — it reports components, cards, tokens, and issues. Fix and re-run until clean.
-3. For component cards & the UI kit, the runtime `_ds_bundle.js` recompiles at end of turn — component-driven previews can't be screenshotted mid-turn; verify token-only specimen cards directly.
-4. Keep brand voice + visual foundations above. When unsure about scope, change only what's asked and suggest the rest.
-
-*Namespace for `@dsCard` / bundle consumption: `window.PassoDesignSystem_3d94f8`.*
+`frontend/` (Next.js) é versão anterior descartada da stack. A aplicação ativa é o projeto Django na raiz; `backend/` contém o serviço Node.js da integração Claude.

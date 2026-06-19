@@ -1,0 +1,57 @@
+{% extends "debtfree/base.html" %}
+{% block title %}DebtFree AI — Carta de Negociação{% endblock %}
+
+{% block content %}
+
+<div class="mb-6 flex items-start justify-between gap-4">
+  <div>
+    <a href="/dashboard/" class="text-sm text-gray-400 hover:text-gray-600 transition">← Voltar ao dashboard</a>
+    <h2 class="text-2xl font-bold mt-1">Carta de Negociação</h2>
+    <p class="text-gray-500 text-sm">{{ debt.creditor }} — R$ {{ debt.total_amount }}</p>
+  </div>
+  <div class="flex gap-2 shrink-0 mt-6">
+    <button onclick="copyLetter()" id="copy-btn" class="btn-ghost">Copiar texto</button>
+    <button onclick="window.print()" class="btn-primary">Baixar PDF</button>
+  </div>
+</div>
+
+{# ── Carta ── #}
+<section class="card mb-4">
+  <div id="letter-content" class="whitespace-pre-line leading-relaxed text-gray-800 font-mono text-sm">{{ letter }}</div>
+</section>
+
+{# ── Dica antes de enviar ── #}
+<p class="text-sm text-gray-500 text-center mb-2">
+  💡 Revise os valores antes de enviar. Esta carta é um ponto de partida para a conversa.
+</p>
+
+{# ── Disclaimer canônico ── #}
+<p class="text-xs text-gray-400 text-center mb-6 leading-relaxed max-w-lg mx-auto">
+  Esta carta foi gerada por inteligência artificial com base nos seus dados e na Lei 14.181/2021.
+  Ela tem caráter informativo e <strong>não constitui aconselhamento jurídico</strong>.
+  Para situações complexas, consulte a <strong>Defensoria Pública</strong>, o <strong>PROCON</strong> ou um advogado.
+</p>
+
+{# ── Próximo passo ── #}
+<div class="card text-center">
+  <p class="text-gray-600 text-sm mb-3">Quer negociar outra dívida?</p>
+  <a href="/dashboard/" class="btn-secondary">Ver todas as dívidas</a>
+</div>
+
+<script>
+function copyLetter() {
+  const text = document.getElementById('letter-content').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    const original = btn.textContent;
+    btn.textContent = '✓ Copiado!';
+    btn.classList.add('text-green-600');
+    setTimeout(() => {
+      btn.textContent = original;
+      btn.classList.remove('text-green-600');
+    }, 2000);
+  });
+}
+</script>
+
+{% endblock %}
