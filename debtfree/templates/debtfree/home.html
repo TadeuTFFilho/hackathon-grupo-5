@@ -1,18 +1,90 @@
 {% extends "debtfree/base.html" %}
-{% block title %}DebtFree AI — Início{% endblock %}
+{% block title %}QuitAI — Organize suas dívidas{% endblock %}
 
 {% block content %}
-<div class="text-center py-20">
-  <h1 class="text-5xl font-bold mb-4">💸 DebtFree AI</h1>
-  <p class="text-gray-500 text-xl mb-10 max-w-md mx-auto">
-    Entenda suas dívidas, conheça seus direitos e negocie com segurança.
+
+{# ── Hero ── #}
+<div class="text-center py-16 sm:py-24">
+  <span class="inline-block bg-teal-50 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-widest mb-5">
+    Lei 14.181/2021 · Gratuito
+  </span>
+  <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-5">
+    Saia das dívidas<br class="hidden sm:block"/>
+    <span class="text-teal-600">com um plano claro</span>
+  </h1>
+  <p class="text-gray-500 text-lg max-w-xl mx-auto mb-4 leading-relaxed">
+    Diga quanto você ganha e o que você deve. Vamos priorizar, explicar seus direitos e escrever sua carta de negociação.
   </p>
-  <a href="/onboarding/"
-     class="bg-blue-600 text-white px-10 py-4 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition">
-    Começar agora
-  </a>
-  <p class="text-gray-400 text-sm mt-8">
-    Mais de 70 milhões de brasileiros estão endividados. Você não precisa enfrentar isso sozinho.
+  <p class="text-gray-400 text-sm mb-8">Grátis · Seus dados não são compartilhados</p>
+  <div class="flex flex-col sm:flex-row gap-3 justify-center">
+    <a href="{% url 'login' %}" class="btn-primary text-base px-8 py-4">
+      Começar agora
+    </a>
+    <a href="{% url 'legal' %}"
+       class="border border-warm-200 text-gray-700 hover:bg-warm-100 font-medium px-8 py-4 rounded-full text-base transition-all duration-150">
+      Ver meus direitos
+    </a>
+  </div>
+  <p class="text-gray-400 text-sm mt-6">
+    Mais de <strong class="text-gray-600">70 milhões</strong> de brasileiros estão endividados. Você não precisa enfrentar isso sozinho.
   </p>
 </div>
+
+{# ── Separador ── #}
+<div class="border-t border-warm-100 mb-16"></div>
+
+{# ── Funcionalidades ── #}
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-16">
+
+  <div class="card text-center hover:shadow-md transition-all duration-200 group">
+    <div class="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-teal-500 transition-all duration-200">
+      <i data-lucide="bar-chart-2" class="w-6 h-6 text-teal-600 group-hover:text-white"></i>
+    </div>
+    <h3 class="font-semibold text-gray-900 mb-2">Diagnóstico financeiro</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">
+      Entenda quanto da sua renda está comprometida e em qual nível de endividamento você se encontra.
+    </p>
+  </div>
+
+  <div class="card text-center hover:shadow-md transition-all duration-200 group">
+    <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-600 transition-all duration-200">
+      <i data-lucide="shield-check" class="w-6 h-6 text-emerald-600 group-hover:text-white"></i>
+    </div>
+    <h3 class="font-semibold text-gray-900 mb-2">Seus direitos garantidos</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">
+      A Lei 14.181/2021 protege você. Saiba quais direitos se aplicam à sua situação e como usá-los.
+    </p>
+  </div>
+
+  <div class="card text-center hover:shadow-md transition-all duration-200 group">
+    <div class="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-teal-500 transition-all duration-200">
+      <i data-lucide="file-text" class="w-6 h-6 text-teal-600 group-hover:text-white"></i>
+    </div>
+    <h3 class="font-semibold text-gray-900 mb-2">Cartas de negociação</h3>
+    <p class="text-sm text-gray-500 leading-relaxed">
+      Gere automaticamente cartas formais para negociar com credores, com propostas baseadas na sua renda.
+    </p>
+  </div>
+
+</div>
+
+{# ── Stats ── #}
+<div class="bg-teal-700 rounded-[14px] p-8 text-white text-center">
+  <p class="text-sm font-medium text-teal-200 uppercase tracking-wide mb-6">O problema é grande. A solução também.</p>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+    <div>
+      <p class="text-4xl font-extrabold tabular">70M+</p>
+      <p class="text-teal-200 text-sm mt-1">brasileiros endividados</p>
+    </div>
+    <div>
+      <p class="text-4xl font-extrabold tabular">R$ 347B</p>
+      <p class="text-teal-200 text-sm mt-1">em dívidas no país</p>
+    </div>
+    <div>
+      <p class="text-4xl font-extrabold">5 anos</p>
+      <p class="text-teal-200 text-sm mt-1">prazo máximo de repactuação pela lei</p>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

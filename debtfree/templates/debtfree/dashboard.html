@@ -1,110 +1,119 @@
 {% extends "debtfree/base.html" %}
-{% block title %}DebtFree AI — Sua análise{% endblock %}
+{% block title %}QuitAI — Início{% endblock %}
 
 {% block content %}
 
 {# ── Cabeçalho ── #}
-<div class="mb-6">
-  <h2 class="text-3xl font-bold">
-    {% if user.name %}Olá, {{ user.name }}{% else %}Sua análise{% endif %}
-  </h2>
-  <p class="text-gray-500 text-sm mt-1">Renda mensal: R$ {{ monthly_income }}</p>
-  <div class="mt-3">
+<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div>
+    <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Seu painel</p>
+    <h2 class="text-2xl font-bold text-gray-900">
+      {% if user.name %}Olá, {{ user.name|truncatewords:1 }}{% else %}Seu painel{% endif %}
+    </h2>
+    <p class="text-gray-500 text-sm mt-1">
+      Renda mensal: <span class="font-semibold text-gray-700 tabular">{{ monthly_income|brl }}</span>
+    </p>
+  </div>
+  <div class="flex flex-col items-start sm:items-end gap-2">
     {% if situation.level == "safe" %}
-      <span class="situation-badge bg-green-100 text-green-800">✅ {{ situation.label }}</span>
+      <span class="situation-badge tone-safe">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i>
+        {{ situation.label }}
+      </span>
+      <p class="text-xs text-emerald-700 max-w-xs text-right hidden sm:block">Suas dívidas estão sob controle. Veja como se manter no caminho.</p>
     {% elif situation.level == "warning" %}
-      <span class="situation-badge bg-yellow-100 text-yellow-800">⚠️ {{ situation.label }}</span>
+      <span class="situation-badge tone-attention">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>
+        {{ situation.label }}
+      </span>
+      <p class="text-xs text-amber-700 max-w-xs text-right hidden sm:block">Suas dívidas estão pesando. Dá pra organizar — siga o plano abaixo.</p>
     {% else %}
-      <span class="situation-badge bg-red-100 text-red-800">🚨 {{ situation.label }}</span>
+      <span class="situation-badge tone-critical">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
+        {{ situation.label }}
+      </span>
+      <p class="text-xs text-red-700 max-w-xs text-right hidden sm:block">Sua renda não cobre suas dívidas. Você tem direitos — vamos usá-los.</p>
     {% endif %}
+    <a href="{% url 'onboarding' %}" class="btn-secondary text-xs">Editar dívidas</a>
   </div>
 </div>
 
-{# ── Painel resumo financeiro ── #}
-<section class="card mb-6">
-  <h3 class="section-title mb-4">Resumo financeiro</h3>
-  <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-
-    <div class="text-center">
-      <p class="text-xs text-gray-400 uppercase tracking-wide">Total em dívidas</p>
-      <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ summary.total_debt }}</p>
-    </div>
-
-    <div class="text-center">
-      <p class="text-xs text-gray-400 uppercase tracking-wide">Renda comprometida</p>
-      <p class="text-2xl font-bold mt-1
-        {% if summary.income_ratio > 50 %}text-red-600
-        {% elif summary.income_ratio > 30 %}text-yellow-600
-        {% else %}text-green-600{% endif %}">
+{# ── Bloco total — superfície rica teal-700 ── #}
+<div class="card-teal mb-5">
+  <p class="text-teal-200 text-xs font-semibold uppercase tracking-widest mb-1">Valor total em dívidas</p>
+  <p class="text-4xl font-extrabold tabular mb-4">{{ summary.total_debt|brl }}</p>
+  <div class="grid grid-cols-3 gap-4 text-center">
+    <div>
+      <p class="text-teal-300 text-xs mb-1">Renda comprometida</p>
+      <p class="text-xl font-bold tabular
+        {% if summary.income_ratio > 50 %}text-red-300
+        {% elif summary.income_ratio > 30 %}text-amber-300
+        {% else %}text-emerald-300{% endif %}">
         {{ summary.income_ratio }}%
       </p>
     </div>
-
-    <div class="text-center">
-      <p class="text-xs text-gray-400 uppercase tracking-wide">Juros pagos/mês</p>
-      <p class="text-2xl font-bold text-orange-600 mt-1">R$ {{ summary.monthly_interest }}</p>
+    <div>
+      <p class="text-teal-300 text-xs mb-1">Juros por mês</p>
+      <p class="text-xl font-bold tabular text-amber-300">{{ summary.monthly_interest|brl }}</p>
     </div>
-
-    <div class="text-center">
-      <p class="text-xs text-gray-400 uppercase tracking-wide">Sobra por mês</p>
-      <p class="text-2xl font-bold mt-1
-        {% if summary.free_income < 0 %}text-red-600{% else %}text-gray-800{% endif %}">
-        R$ {{ summary.free_income }}
+    <div>
+      <p class="text-teal-300 text-xs mb-1">Sobra por mês</p>
+      <p class="text-xl font-bold tabular
+        {% if summary.free_income < 0 %}text-red-300{% else %}text-white{% endif %}">
+        {{ summary.free_income|brl }}
       </p>
     </div>
-
   </div>
+</div>
 
-  {# Barra visual de comprometimento da renda #}
-  <div class="mt-5">
-    <div class="flex justify-between text-xs text-gray-400 mb-1">
-      <span>0%</span>
-      <span>30% (limite saudável)</span>
-      <span>100%</span>
+{# ── Barra de comprometimento ── #}
+<div class="card mb-5">
+  <h3 class="section-title mb-3">Comprometimento da renda</h3>
+  <div class="flex justify-between text-xs text-gray-400 mb-1">
+    <span>0%</span>
+    <span>30% — limite saudável</span>
+    <span>100%</span>
+  </div>
+  <div class="h-3 bg-warm-100 rounded-full overflow-hidden">
+    <div class="h-full rounded-full transition-all duration-300
+      {% if summary.income_ratio > 50 %}bg-red-500
+      {% elif summary.income_ratio > 30 %}bg-amber-400
+      {% else %}bg-emerald-500{% endif %}"
+      style="width: {{ summary.income_ratio|floatformat:0 }}%">
     </div>
-    <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
-      <div class="h-full rounded-full transition-all
-        {% if summary.income_ratio > 50 %}bg-red-500
-        {% elif summary.income_ratio > 30 %}bg-yellow-400
-        {% else %}bg-green-500{% endif %}"
-        style="width: {{ summary.income_ratio|floatformat:0 }}%">
-      </div>
-    </div>
-    {# Marcador de 30% #}
-    <div class="relative h-0">
-      <div class="absolute top-[-14px] border-l-2 border-gray-400 border-dashed h-5" style="left: 30%"></div>
-    </div>
+  </div>
+  <div class="relative h-0">
+    <div class="absolute top-[-14px] border-l-2 border-warm-300 border-dashed h-5" style="left: 30%"></div>
   </div>
 
   {# Dica SELIC #}
   {% if summary.interest_vs_selic > 1 %}
-  <div class="mt-5 bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
-    <p class="font-medium text-amber-800">💡 Seus juros vs. SELIC</p>
-    <p class="text-amber-700 mt-1">
-      Você paga <strong>R$ {{ summary.monthly_interest }}/mês em juros</strong> —
-      {{ summary.interest_vs_selic }}x mais do que a SELIC renderia sobre o mesmo valor
-      (R$ {{ summary.selic_monthly_yield }}/mês a {{ market.selic_anual }}% ao ano).
+  <div class="mt-5 bg-teal-50 border border-teal-100 rounded-[10px] p-4 text-sm flex gap-3">
+    <i data-lucide="trending-up" class="w-4 h-4 text-teal-500 shrink-0 mt-0.5"></i>
+    <p class="text-teal-800">
+      Você paga <strong class="tabular">{{ summary.monthly_interest|brl }}/mês em juros</strong> —
+      {{ summary.interest_vs_selic }}x mais do que a SELIC renderia sobre o mesmo valor.
       Quitar suas dívidas é o melhor investimento que você pode fazer agora.
     </p>
   </div>
   {% endif %}
-</section>
+</div>
 
 {# ── Gráfico de distribuição ── #}
-<section class="card mb-6">
+<section class="card mb-5">
   <h3 class="section-title mb-4">Distribuição das dívidas</h3>
   <div class="flex flex-col sm:flex-row items-center gap-6">
-    <div class="w-48 h-48 shrink-0">
+    <div class="w-44 h-44 shrink-0">
       <canvas id="debtChart"></canvas>
     </div>
-    <ul class="flex-1 space-y-2 text-sm">
+    <ul class="flex-1 space-y-2 text-sm w-full">
       {% for debt in prioritized %}
-      <li class="flex justify-between items-center">
+      <li class="flex justify-between items-center py-1 border-b border-warm-100 last:border-0">
         <span class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full inline-block" id="legend-color-{{ forloop.counter0 }}"></span>
-          {{ debt.creditor }}
+          <span class="w-2.5 h-2.5 rounded-full inline-block shrink-0" id="legend-color-{{ forloop.counter0 }}"></span>
+          <span class="text-gray-700">{{ debt.creditor }}</span>
         </span>
-        <span class="font-medium">R$ {{ debt.total_amount }}</span>
+        <span class="font-semibold tabular text-gray-900">{{ debt.total_amount|brl }}</span>
       </li>
       {% endfor %}
     </ul>
@@ -113,17 +122,16 @@
 
 {# ── Resumo da IA ── #}
 {% if analysis.summary %}
-<section class="card mb-6">
-  <h3 class="section-title">Resumo</h3>
-  <p class="text-gray-600 mt-2">{{ analysis.summary }}</p>
+<section class="card mb-5">
+  <h3 class="section-title mb-2">Resumo da situação</h3>
+  <p class="text-gray-600 text-sm leading-relaxed">{{ analysis.summary }}</p>
 </section>
 {% endif %}
 
 {# ── Ranking de dívidas ── #}
-<section class="card mb-6">
-  <h3 class="section-title">Pague nessa ordem 👇</h3>
-
-  <div class="space-y-4 mt-4">
+<section class="card mb-5">
+  <h3 class="section-title mb-4">Pague nessa ordem</h3>
+  <div class="space-y-3">
     {% for debt in prioritized %}
     <div class="debt-row
       {% if forloop.counter == 1 %}debt-row--urgent
@@ -135,45 +143,64 @@
       <div class="debt-info flex-1">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="debt-creditor">{{ debt.creditor }}</span>
-          <span class="debt-type">{{ debt.type_label }}</span>
-          {% if debt.is_prescribed %}
-            <span class="badge-prescribed">pode estar prescrita</span>
+          {% if forloop.first %}
+            <span class="badge-priority">Pague esta primeiro</span>
           {% endif %}
-          {# Alerta de prescrição próxima #}
+          <span class="debt-type">{{ debt.type_label }}</span>
+          {# Badges de risco por tipo — sempre com ícone + label #}
+          {% if debt.type == 'pensao_alimenticia' %}
+            <span class="text-xs bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="alert-circle" class="w-3 h-3"></i>Risco de prisão
+            </span>
+          {% elif debt.type == 'aluguel' %}
+            <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="home" class="w-3 h-3"></i>Risco de despejo
+            </span>
+          {% elif debt.type == 'servicos_essenciais' %}
+            <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="zap" class="w-3 h-3"></i>Risco de corte
+            </span>
+          {% elif debt.type == 'financiamento_garantia' %}
+            <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="car" class="w-3 h-3"></i>Risco de perda do bem
+            </span>
+          {% endif %}
+          {% if debt.is_prescribed %}
+            <span class="badge-prescribed inline-flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3"></i>Pode estar prescrita — verifique antes de pagar
+            </span>
+          {% endif %}
           {% if debt.prescription.urgent %}
-            <span class="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-              ⏳ prescreve em {{ debt.prescription.days_left }} dias ({{ debt.prescription.prescription_date }})
+            <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3"></i>
+              Prescreve em {{ debt.prescription.days_left }} dias
             </span>
           {% endif %}
         </div>
 
-        {# Dica de amortização SELIC #}
+        {# Dica de amortização #}
         {% if debt.amortization.has_tip %}
-        <div class="mt-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-          <span class="font-medium text-gray-700">💰 Amortização:</span>
-          taxa estimada <strong>{{ debt.amortization.rate_mensal }}%/mês</strong>
+        <div class="mt-2 text-xs text-gray-500 bg-warm-50 rounded-[10px] p-2.5 border border-warm-100">
+          <span class="font-medium text-gray-700">Amortização:</span>
+          taxa estimada <strong class="tabular">{{ debt.amortization.rate_mensal }}%/mês</strong>
           vs. SELIC <strong>{{ market.selic_anual }}%/ano</strong>
-          ({{ debt.amortization.juros_vs_selic }}x mais caro que a SELIC).
+          ({{ debt.amortization.juros_vs_selic }}x mais caro).
           {% if debt.amortization.meses_para_quitar %}
-            Pagando R$ {{ debt.monthly_payment }}/mês, quita em
-            <strong>{{ debt.amortization.meses_para_quitar }} meses</strong>
-            pagando R$ {{ debt.amortization.total_pago }} no total
-            (R$ {{ debt.amortization.economia_juros }} em juros).
-          {% endif %}
-          {% if debt.amortization.meses_ganhos %}
-            Com +20% na parcela (R$ {{ debt.amortization.extra_pmt }}),
-            ganha <strong>{{ debt.amortization.meses_ganhos }} meses</strong>.
+            Pagando {{ debt.monthly_payment|brl }}/mês, quita em
+            <strong>{{ debt.amortization.meses_para_quitar }} meses</strong>.
           {% endif %}
         </div>
         {% endif %}
       </div>
 
       <div class="debt-actions text-right shrink-0">
-        <div class="font-bold">R$ {{ debt.total_amount }}</div>
+        <div class="debt-amount tabular">{{ debt.total_amount|brl }}</div>
         {% if debt.monthly_payment %}
-        <div class="text-xs text-gray-400">R$ {{ debt.monthly_payment }}/mês</div>
+        <div class="text-xs text-gray-400 tabular">{{ debt.monthly_payment|brl }}/mês</div>
         {% endif %}
-        <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost text-xs mt-1 block">Gerar carta</a>
+        <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost text-xs mt-1 block">
+          Gerar carta
+        </a>
       </div>
 
     </div>
@@ -183,15 +210,15 @@
 
 {# ── Plano de ação ── #}
 {% if analysis.action_plan %}
-<section class="card mb-6">
-  <h3 class="section-title">Plano de ação</h3>
-  <div class="space-y-4 mt-4">
+<section class="card mb-5">
+  <h3 class="section-title mb-4">Próximos passos</h3>
+  <div class="space-y-4">
     {% for item in analysis.action_plan %}
     <div class="action-step">
       <div class="action-number">{{ item.step }}</div>
       <div>
-        <p class="font-medium">{{ item.action }}</p>
-        <p class="text-sm text-gray-500">{{ item.reason }}</p>
+        <p class="font-medium text-gray-900 text-sm">{{ item.action }}</p>
+        <p class="text-sm text-gray-500 mt-0.5">{{ item.reason }}</p>
       </div>
     </div>
     {% endfor %}
@@ -199,42 +226,60 @@
 </section>
 {% endif %}
 
-{# ── Taxas de mercado (BCB) ── #}
-<section class="card mb-6 bg-blue-50 border border-blue-100">
-  <h3 class="section-title text-blue-800">📊 Taxas de mercado hoje (Banco Central)</h3>
-  <div class="grid grid-cols-3 gap-4 mt-4 text-center text-sm">
+{# ── Taxas de mercado ── #}
+<section class="card mb-5 tone-info">
+  <div class="flex items-center gap-2 mb-4">
+    <i data-lucide="activity" class="w-4 h-4 text-teal-600"></i>
+    <h3 class="section-title text-teal-800">Taxas de mercado — Banco Central</h3>
+  </div>
+  <div class="grid grid-cols-3 gap-4 text-center text-sm">
     <div>
-      <p class="text-gray-500 text-xs">SELIC</p>
-      <p class="text-xl font-bold text-blue-700">{{ market.selic_anual }}%<span class="text-xs font-normal">/ano</span></p>
+      <p class="text-gray-500 text-xs mb-1">SELIC</p>
+      <p class="text-xl font-bold tabular text-teal-700">{{ market.selic_anual }}%<span class="text-xs font-normal">/ano</span></p>
     </div>
     <div>
-      <p class="text-gray-500 text-xs">Juros cartão (média)</p>
-      <p class="text-xl font-bold text-red-600">{{ market.juros_cartao_mensal }}%<span class="text-xs font-normal">/mês</span></p>
+      <p class="text-gray-500 text-xs mb-1">Cartão (média)</p>
+      <p class="text-xl font-bold tabular text-red-600">{{ market.juros_cartao_mensal }}%<span class="text-xs font-normal">/mês</span></p>
     </div>
     <div>
-      <p class="text-gray-500 text-xs">Juros empréstimo (média)</p>
-      <p class="text-xl font-bold text-orange-600">{{ market.juros_emprestimo_mensal }}%<span class="text-xs font-normal">/mês</span></p>
+      <p class="text-gray-500 text-xs mb-1">Empréstimo (média)</p>
+      <p class="text-xl font-bold tabular text-amber-600">{{ market.juros_emprestimo_mensal }}%<span class="text-xs font-normal">/mês</span></p>
     </div>
   </div>
-  <p class="text-xs text-blue-500 mt-3 text-center">Fonte: Banco Central do Brasil — atualizado em tempo real</p>
+  <p class="text-xs text-teal-500 mt-3 text-center">Fonte: Banco Central do Brasil — atualizado em tempo real</p>
 </section>
 
-{# ── Link para direitos jurídicos ── #}
-<div class="text-center">
-  <a href="/dashboard/legal/" class="btn-secondary">⚖️ Ver meus direitos pela Lei 14.181/2021</a>
+{# ── Link para direitos ── #}
+<div class="card flex flex-col sm:flex-row items-center justify-between gap-4 bg-teal-50 border border-teal-100 mb-5">
+  <div class="flex items-start gap-3">
+    <i data-lucide="shield" class="w-5 h-5 text-teal-500 shrink-0 mt-0.5"></i>
+    <div>
+      <p class="font-semibold text-teal-900 text-sm">Conhece seus direitos?</p>
+      <p class="text-sm text-teal-700 mt-0.5">A Lei 14.181/2021 pode proteger você de cobranças abusivas.</p>
+    </div>
+  </div>
+  <a href="{% url 'legal' %}" class="btn-primary shrink-0 whitespace-nowrap">
+    Ver meus direitos
+  </a>
+</div>
+
+{# ── Disclaimer ── #}
+<div class="flex gap-3 bg-warm-50 border border-warm-200 rounded-[14px] px-4 py-3 mb-6 text-xs text-gray-500">
+  <i data-lucide="info" class="w-4 h-4 shrink-0 text-gray-400 mt-0.5"></i>
+  <p>Esta ferramenta oferece orientação informativa com base na Lei 14.181/2021 e não constitui aconselhamento jurídico. Antes de assinar acordos, confirme com a <strong>Defensoria Pública</strong>, o <strong>PROCON</strong> ou um advogado.</p>
 </div>
 
 {# ── Chart.js ── #}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 const COLORS = [
-  '#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#14b8a6'
+  '#2C8377','#246D65','#1D5850','#4AA9A2','#A0D3CE',
+  '#77BFB9','#C9E6E3','#f97316','#eab308','#8b5cf6'
 ];
 
 const labels = {{ chart_labels|safe }};
 const values = {{ chart_values|safe }};
 
-// Pinta as legendas
 labels.forEach((_, i) => {
   const el = document.getElementById('legend-color-' + i);
   if (el) el.style.backgroundColor = COLORS[i % COLORS.length];
@@ -249,14 +294,15 @@ new Chart(ctx, {
       data: values,
       backgroundColor: COLORS.slice(0, values.length),
       borderWidth: 2,
-      borderColor: '#fff',
+      borderColor: '#F8F7F5',
     }]
   },
   options: {
-    cutout: '65%',
+    cutout: '68%',
     plugins: { legend: { display: false } },
     responsive: true,
     maintainAspectRatio: true,
+    animation: { duration: 320, easing: 'easeInOutQuart' }
   }
 });
 </script>

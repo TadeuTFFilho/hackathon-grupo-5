@@ -1,0 +1,151 @@
+{% extends "debtfree/base.html" %}
+{% block title %}QuitAI — Sua renda{% endblock %}
+
+{% block content %}
+
+{# ── Django Messages ── #}
+{% if messages %}
+  <div class="mb-6 space-y-2">
+    {% for message in messages %}
+      {% if message.tags == 'success' %}
+        <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-[14px] px-4 py-3 text-sm">
+          <i data-lucide="check-circle" class="w-4 h-4 shrink-0 text-emerald-500"></i>
+          {{ message }}
+        </div>
+      {% else %}
+        <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-[14px] px-4 py-3 text-sm">
+          <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-400"></i>
+          {{ message }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+{# ── Cabeçalho ── #}
+<div class="mb-8">
+  <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Perfil financeiro</p>
+  <h2 class="text-2xl font-bold text-gray-900">Atualizar sua renda</h2>
+  <p class="text-gray-500 mt-1 text-sm">Mantenha seus dados atualizados para receber orientações precisas.</p>
+</div>
+
+{# ── Grid: formulário + card lateral ── #}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+  {# ── Formulário ── #}
+  <div class="lg:col-span-2">
+    <form action="{% url 'renda' %}" method="POST" novalidate>
+      {% csrf_token %}
+
+      <div class="card space-y-5">
+        <h3 class="section-title text-gray-800 border-b border-warm-100 pb-3">Dados de renda</h3>
+
+        {# Renda mensal #}
+        <div class="flex flex-col gap-1">
+          <label for="id_monthly_income" class="text-sm font-medium text-gray-700">
+            Quanto você recebe por mês? <span class="text-teal-500">*</span>
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm font-medium pointer-events-none">R$</span>
+            <input id="id_monthly_income" type="number" name="monthly_income"
+                   min="0" step="0.01" placeholder="0,00"
+                   value="{{ form_data.monthly_income|default:'' }}"
+                   required class="input pl-10" />
+          </div>
+        </div>
+
+        {# Fonte de renda #}
+        <div class="flex flex-col gap-1">
+          <label for="id_income_source" class="text-sm font-medium text-gray-700">Fonte de renda principal</label>
+          <div class="relative">
+            <select id="id_income_source" name="income_source"
+                    class="input appearance-none pr-10">
+              <option value="">Selecione…</option>
+              <option value="clt"        {% if form_data.income_source == 'clt' %}selected{% endif %}>Empregado CLT</option>
+              <option value="autonomo"   {% if form_data.income_source == 'autonomo' %}selected{% endif %}>Autônomo / Freelancer</option>
+              <option value="mei"        {% if form_data.income_source == 'mei' %}selected{% endif %}>MEI / Empresário</option>
+              <option value="aposentado" {% if form_data.income_source == 'aposentado' %}selected{% endif %}>Aposentado / Pensionista</option>
+              <option value="outro"      {% if form_data.income_source == 'outro' %}selected{% endif %}>Outro</option>
+            </select>
+            <span class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </span>
+          </div>
+        </div>
+
+        {# Outras rendas #}
+        <div class="flex flex-col gap-1">
+          <label for="id_other_income" class="text-sm font-medium text-gray-700">
+            Outras rendas mensais <span class="text-gray-400 font-normal">(opcional)</span>
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm font-medium pointer-events-none">R$</span>
+            <input id="id_other_income" type="number" name="other_income"
+                   min="0" step="0.01" placeholder="0,00"
+                   value="{{ form_data.other_income|default:'' }}"
+                   class="input pl-10" />
+          </div>
+          <p class="text-xs text-gray-400">Aluguel recebido, bicos, pensão alimentícia recebida, etc.</p>
+        </div>
+
+      </div>
+
+      {# ── Botões ── #}
+      <div class="mt-5 flex flex-col sm:flex-row gap-3">
+        <button type="submit"
+                class="flex-1 flex items-center justify-center gap-2
+                       bg-teal-500 hover:bg-teal-600 active:scale-[0.98]
+                       text-white font-semibold text-sm py-3 px-6 rounded-full
+                       transition-all duration-150 shadow-sm">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          Salvar renda
+        </button>
+
+        <a href="{% url 'dashboard' %}"
+           class="flex items-center justify-center gap-1 btn-secondary py-3 px-6">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          Voltar
+        </a>
+      </div>
+
+    </form>
+  </div>
+
+  {# ── Card lateral ── #}
+  <aside class="space-y-4">
+
+    <div class="card border border-teal-100 bg-teal-50">
+      <div class="flex items-center gap-2 mb-3">
+        <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center shrink-0">
+          <i data-lucide="info" class="w-4 h-4 text-white"></i>
+        </div>
+        <h4 class="font-semibold text-teal-900 text-sm">Por que informar sua renda?</h4>
+      </div>
+      <ul class="space-y-2.5 text-sm text-teal-800">
+        <li class="flex gap-2 items-start">
+          <i data-lucide="check" class="w-4 h-4 text-teal-500 shrink-0 mt-0.5"></i>
+          <span>Calculamos o percentual comprometido com dívidas.</span>
+        </li>
+        <li class="flex gap-2 items-start">
+          <i data-lucide="check" class="w-4 h-4 text-teal-500 shrink-0 mt-0.5"></i>
+          <span>A lei garante seus gastos essenciais — nenhuma dívida pode comprometer o básico para você viver.</span>
+        </li>
+        <li class="flex gap-2 items-start">
+          <i data-lucide="check" class="w-4 h-4 text-teal-500 shrink-0 mt-0.5"></i>
+          <span>Geramos propostas de parcelamento dentro da sua capacidade real.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card border border-emerald-100 bg-emerald-50">
+      <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">Lei 14.181/2021</p>
+      <p class="text-sm text-emerald-800 leading-relaxed">
+        Protege você e garante que seus gastos essenciais — alimentação, saúde e moradia — nunca sejam comprometidos pelas dívidas.
+      </p>
+    </div>
+
+  </aside>
+
+</div>
+
+{% endblock %}

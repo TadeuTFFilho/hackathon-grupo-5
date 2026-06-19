@@ -1,109 +1,164 @@
 {% extends "debtfree/base.html" %}
-{% block title %}DebtFree AI — Seus direitos{% endblock %}
+{% block title %}QuitAI — Seus direitos{% endblock %}
 
 {% block content %}
 
-<div class="mb-6">
-  <a href="/dashboard/" class="text-sm text-gray-400 hover:text-gray-600">← Voltar ao dashboard</a>
-  <h2 class="text-3xl font-bold mt-2">Seus direitos</h2>
+<div class="mb-8">
+  <a href="{% url 'dashboard' %}" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-3 transition-all duration-150">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    Voltar ao início
+  </a>
+  <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Proteção legal</p>
+  <h2 class="text-2xl font-bold text-gray-900">Seus direitos</h2>
   <p class="text-gray-500 text-sm mt-1">Lei 14.181/2021 — Lei do Superendividamento</p>
 </div>
 
 {# ── Situação atual ── #}
+{% if analysis.legal_rights %}
 <section class="card mb-6">
-  <h3 class="section-title">Sua situação</h3>
-  <p class="text-gray-600 mt-2">{{ analysis.legal_rights }}</p>
+  <h3 class="section-title mb-2">Sua situação</h3>
+  <p class="text-gray-600 text-sm leading-relaxed">{{ analysis.legal_rights }}</p>
 </section>
+{% endif %}
 
 {# ── O que a lei garante ── #}
 <section class="card mb-6">
-  <h3 class="section-title">O que a Lei 14.181/2021 garante</h3>
-  <ul class="mt-4 space-y-3">
-    <li class="legal-item">
-      <span class="legal-icon">🔄</span>
-      <div>
-        <p class="font-medium">Repactuação das dívidas</p>
-        <p class="text-sm text-gray-500">
-          Você pode pedir ao juiz que reúna todas as dívidas e refaça os pagamentos
-          em até 5 anos, com juros reduzidos.
-        </p>
+  <h3 class="section-title mb-5">O que a Lei 14.181/2021 garante</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+    <div class="flex gap-4 p-4 bg-teal-50 rounded-[14px] border border-teal-100">
+      <div class="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center shrink-0">
+        <i data-lucide="refresh-cw" class="w-5 h-5 text-white"></i>
       </div>
-    </li>
-    <li class="legal-item">
-      <span class="legal-icon">🛡️</span>
       <div>
-        <p class="font-medium">Proteção do mínimo existencial</p>
-        <p class="text-sm text-gray-500">
-          Nenhuma dívida pode comprometer sua renda mínima para sobrevivência
-          (referência: 1 salário mínimo).
-        </p>
+        <p class="font-semibold text-gray-900 text-sm">Repactuação das dívidas</p>
+        <p class="text-sm text-gray-500 mt-1">Reúna todas as dívidas em um plano de até 5 anos, com juros reduzidos.</p>
       </div>
-    </li>
-    <li class="legal-item">
-      <span class="legal-icon">⚖️</span>
+    </div>
+
+    <div class="flex gap-4 p-4 bg-emerald-50 rounded-[14px] border border-emerald-100">
+      <div class="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+        <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+      </div>
       <div>
-        <p class="font-medium">Revisão de juros abusivos</p>
-        <p class="text-sm text-gray-500">
-          O juiz pode revisar e reduzir taxas de juros consideradas abusivas pelo mercado.
-        </p>
+        <p class="font-semibold text-gray-900 text-sm">Proteção dos gastos essenciais</p>
+        <p class="text-sm text-gray-500 mt-1">Nenhuma dívida pode comprometer o necessário para sua sobrevivência.</p>
       </div>
-    </li>
-    <li class="legal-item">
-      <span class="legal-icon">🤝</span>
+    </div>
+
+    <div class="flex gap-4 p-4 bg-teal-50 rounded-[14px] border border-teal-100">
+      <div class="w-9 h-9 bg-teal-600 rounded-xl flex items-center justify-center shrink-0">
+        <i data-lucide="scale" class="w-5 h-5 text-white"></i>
+      </div>
       <div>
-        <p class="font-medium">Audiência de conciliação</p>
-        <p class="text-sm text-gray-500">
-          Os credores são obrigados a comparecer e negociar. Você não precisa aceitar
-          a primeira proposta.
-        </p>
+        <p class="font-semibold text-gray-900 text-sm">Revisão de juros abusivos</p>
+        <p class="text-sm text-gray-500 mt-1">O juiz pode reduzir taxas de juros consideradas abusivas.</p>
       </div>
-    </li>
-  </ul>
+    </div>
+
+    <div class="flex gap-4 p-4 bg-amber-50 rounded-[14px] border border-amber-100">
+      <div class="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
+        <i data-lucide="users" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <p class="font-semibold text-gray-900 text-sm">Audiência de conciliação</p>
+        <p class="text-sm text-gray-500 mt-1">Credores são obrigados a negociar. Você não precisa aceitar a primeira proposta.</p>
+      </div>
+    </div>
+
+  </div>
 </section>
 
 {# ── Dívidas prescritas ── #}
 {% if prescribed_debts %}
-<section class="card mb-6 border-l-4 border-purple-400">
-  <h3 class="section-title">Dívidas que podem estar prescritas</h3>
-  <p class="text-sm text-gray-500 mt-1">
-    Dívidas com mais de 5 anos não podem mais ser cobradas judicialmente.
-    Confirme as datas antes de pagar.
-  </p>
-  <ul class="mt-4 space-y-2">
+<section class="card mb-6 border border-purple-200 bg-purple-50">
+  <div class="flex items-center gap-2 mb-3">
+    <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shrink-0">
+      <i data-lucide="clock" class="w-4 h-4 text-white"></i>
+    </div>
+    <h3 class="section-title text-purple-900">Dívidas possivelmente prescritas</h3>
+  </div>
+  <ul class="space-y-2 mb-4">
     {% for debt in prescribed_debts %}
-    <li class="flex justify-between text-sm">
-      <span class="font-medium">{{ debt.creditor }}</span>
-      <span class="text-gray-500">R$ {{ debt.total_amount }}</span>
+    <li class="flex justify-between items-center bg-white rounded-[10px] px-4 py-2.5 text-sm border border-purple-100">
+      <span class="font-medium text-gray-900">{{ debt.creditor }}</span>
+      <span class="text-gray-500 tabular">{{ debt.total_amount|brl }}</span>
     </li>
     {% endfor %}
   </ul>
-  <p class="text-xs text-gray-400 mt-3">
-    ⚠️ Mesmo prescrita, a dívida pode aparecer no seu histórico. Consulte um advogado ou o PROCON.
-  </p>
+  <div class="flex gap-3 bg-white border border-purple-200 rounded-[10px] px-4 py-3 text-xs text-purple-800">
+    <i data-lucide="info" class="w-4 h-4 shrink-0 text-purple-500 mt-0.5"></i>
+    <p>Esta dívida pode estar <strong>prescrita</strong> (vencida há mais de 5 anos). Dívidas prescritas não podem ser cobradas judicialmente, mas pagar ou reconhecer a dívida pode reiniciar o prazo. <strong>Não faça acordo antes de confirmar a prescrição</strong> com um orientador jurídico.</p>
+  </div>
 </section>
 {% endif %}
 
 {# ── Onde buscar ajuda ── #}
 <section class="card mb-6">
-  <h3 class="section-title">Onde buscar ajuda gratuita</h3>
-  <ul class="mt-4 space-y-2 text-sm text-gray-700">
-    <li>🏛️ <strong>Defensoria Pública</strong> — representação judicial gratuita</li>
-    <li>📋 <strong>PROCON</strong> — mediação e orientação ao consumidor</li>
-    <li>🤝 <strong>CPC (Centro de Práticas Conciliatórias)</strong> — conciliação extrajudicial</li>
-    <li>💳 <strong>Feirão Serasa</strong> — descontos de até 99% em dívidas negativadas</li>
-  </ul>
+  <h3 class="section-title mb-4">Onde buscar ajuda gratuita</h3>
+  <div class="space-y-2">
+
+    <div class="flex items-center gap-3 p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="landmark" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-gray-900">Defensoria Pública</p>
+        <p class="text-xs text-gray-500">Representação judicial gratuita para quem não pode pagar advogado</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="megaphone" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-gray-900">PROCON</p>
+        <p class="text-xs text-gray-500">Mediação e orientação ao consumidor endividado</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="handshake" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-gray-900">CPC — Centro de Práticas Conciliatórias</p>
+        <p class="text-xs text-gray-500">Conciliação extrajudicial sem custo</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="percent" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-gray-900">Feirão Serasa</p>
+        <p class="text-xs text-gray-500">Descontos de até 99% em dívidas negativadas</p>
+      </div>
+    </div>
+
+  </div>
 </section>
 
 {# ── Dica de negociação ── #}
 {% if analysis.negotiation_tip %}
-<section class="card mb-6">
-  <h3 class="section-title">💡 Dica de negociação</h3>
-  <p class="text-gray-600 mt-2">{{ analysis.negotiation_tip }}</p>
+<section class="card mb-6 bg-teal-50 border border-teal-100">
+  <div class="flex items-start gap-3">
+    <i data-lucide="lightbulb" class="w-5 h-5 text-teal-500 shrink-0 mt-0.5"></i>
+    <div>
+      <h3 class="section-title text-teal-900 mb-1">Dica de negociação</h3>
+      <p class="text-gray-700 text-sm leading-relaxed">{{ analysis.negotiation_tip }}</p>
+    </div>
+  </div>
 </section>
 {% endif %}
 
-<div class="text-center">
-  <a href="/dashboard/" class="btn-secondary">← Voltar ao dashboard</a>
+<div class="flex justify-center">
+  <a href="{% url 'dashboard' %}" class="btn-secondary inline-flex items-center gap-2">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    Voltar ao início
+  </a>
 </div>
 
 {% endblock %}

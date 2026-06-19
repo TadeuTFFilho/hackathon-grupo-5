@@ -1,49 +1,90 @@
 {% extends "debtfree/base.html" %}
-{% block title %}DebtFree AI — Cadastro{% endblock %}
+{% block title %}QuitAI — Suas dívidas{% endblock %}
 
 {% block content %}
-<h2 class="text-3xl font-bold mb-2">Suas dívidas</h2>
-<p class="text-gray-500 mb-8">Preencha seus dados para receber a análise personalizada.</p>
 
+{# ── Cabeçalho ── #}
+<div class="mb-8">
+  <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Análise personalizada</p>
+  <h2 class="text-2xl font-bold text-gray-900">Informe suas dívidas</h2>
+  <p class="text-gray-500 mt-1 text-sm">Preencha os dados abaixo para receber seu plano de quitação.</p>
+</div>
+
+{# ── Indicador de progresso ── #}
+<div class="flex items-center gap-2 mb-8">
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-xs font-bold shrink-0">1</div>
+    <span class="text-sm font-medium text-teal-600 hidden sm:inline">Dados gerais</span>
+  </div>
+  <div class="flex-1 h-0.5 bg-teal-200 rounded"></div>
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center text-xs font-bold shrink-0">2</div>
+    <span class="text-sm font-medium text-teal-600 hidden sm:inline">Suas dívidas</span>
+  </div>
+  <div class="flex-1 h-0.5 bg-warm-200 rounded"></div>
+  <div class="flex items-center gap-2">
+    <div class="w-7 h-7 rounded-full bg-warm-200 text-gray-500 flex items-center justify-center text-xs font-bold shrink-0">3</div>
+    <span class="text-sm font-medium text-gray-400 hidden sm:inline">Análise</span>
+  </div>
+</div>
+
+{# ── Erro ── #}
 {% if error %}
-<div class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-6">{{ error }}</div>
+<div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-[14px] px-4 py-3 mb-6 text-sm">
+  <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+  {{ error }}
+</div>
 {% endif %}
 
-<form action="/analyze/" method="POST">
+<form action="{% url 'analyze' %}" method="POST">
   {% csrf_token %}
 
-  <!-- Dados pessoais -->
-  <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
-    <h3 class="font-semibold text-lg mb-4">Dados gerais</h3>
-    <div class="grid grid-cols-2 gap-4">
+  {# ── Passo 1: Dados gerais ── #}
+  <div class="card mb-5">
+    <h3 class="section-title text-gray-800 border-b border-warm-100 pb-3 mb-4">Dados gerais</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm text-gray-600 mb-1">Seu nome</label>
-        <input type="text" name="user_name" placeholder="João Silva"
-               class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Seu nome</label>
+        <input type="text" name="user_name" placeholder="Ex: Maria Silva"
+               value="{{ user.name|default:'' }}"
+               class="input" />
       </div>
       <div>
-        <label class="block text-sm text-gray-600 mb-1">Renda mensal (R$) *</label>
-        <input type="number" name="monthly_income" placeholder="3000" required min="1" step="0.01"
-               class="w-full border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+          Quanto você recebe por mês? <span class="text-teal-500">*</span>
+        </label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm font-medium pointer-events-none">R$</span>
+          <input type="number" name="monthly_income" placeholder="0,00" required min="1" step="0.01"
+                 class="input pl-10" />
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Dívidas -->
-  <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
-    <h3 class="font-semibold text-lg mb-4">Suas dívidas</h3>
-    <div id="debts-container">
+  {# ── Passo 2: Dívidas ── #}
+  <div class="card mb-5">
+    <div class="flex items-center justify-between border-b border-warm-100 pb-3 mb-4">
+      <h3 class="section-title text-gray-800">Suas dívidas</h3>
+      <span class="text-xs text-gray-400">Adicione pelo menos uma</span>
+    </div>
+    <div id="debts-container" class="space-y-3">
       {% include "debtfree/partials/debt_row.html" %}
     </div>
     <button type="button" onclick="addDebt()"
-            class="mt-4 text-blue-600 font-medium text-sm hover:underline">
-      + Adicionar dívida
+            class="mt-4 flex items-center gap-1.5 text-teal-600 font-medium text-sm hover:text-teal-700 transition-all duration-150">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      Adicionar dívida
     </button>
   </div>
 
+  {# ── Submit ── #}
   <button type="submit"
-          class="w-full bg-blue-600 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition">
-    Analisar minhas dívidas
+          class="w-full flex items-center justify-center gap-2
+                 bg-teal-500 hover:bg-teal-600 active:scale-[0.98]
+                 text-white font-semibold py-4 rounded-full text-base transition-all duration-150 shadow-sm">
+    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+    Analisar minha situação
   </button>
 </form>
 
@@ -54,10 +95,12 @@
 <script>
 function addDebt() {
   const container = document.getElementById('debts-container');
-  const template = document.getElementById('debt-row-template').innerHTML;
+  const template  = document.getElementById('debt-row-template').innerHTML;
   const div = document.createElement('div');
   div.innerHTML = template;
   container.appendChild(div.firstElementChild);
+  if (window.lucide) lucide.createIcons();
 }
 </script>
+
 {% endblock %}
