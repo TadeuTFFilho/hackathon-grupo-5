@@ -6,6 +6,9 @@ from .rules import enrich, prioritize, classify_situation
 from .claude_service import analyze_debts, generate_letter
 from .mock_data import MOCK_USERS, MOCK_DEBT_DATA, get_user_by_cpf
 from .auth import login_required
+from .financial_service import (
+    get_market_rates, financial_summary, amortization_tip, prescription_detail
+)
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -132,9 +135,31 @@ def _get_debt_data(request):
 
 @login_required
 def dashboard(request):
-    user      = request.session["user"]
-    debt_data = _get_debt_data(request)
-    return render(request, "debtfree/dashboard.html", {**debt_data, "user": user})
+    user        = request.session["user"]
+    debt_data   = _get_debt_data(request)
+    market      = get_market_rates()
+    prioritized = debt_data["prioritized"]
+    income      = debt_data["monthly_income"]
+
+    # Enriquece cada dívida com dica de amortização e detalhe de prescrição
+    for debt in prioritized:
+        debt["amortization"] = amortization_tip(debt, market)
+        debt["prescription"] = prescription_detail(debt.get("due_date"))
+
+    summary = financial_summary(income, prioritized, market)
+
+    # Distribuição para o gráfico donut (labels + valores)
+    chart_labels = [d["creditor"] for d in prioritized]
+    chart_values = [d["total_amount"] for d in prioritized]
+
+    return render(request, "debtfree/dashboard.html", {
+        **debt_data,
+        "user":          user,
+        "market":        market,
+        "summary":       summary,
+        "chart_labels":  json.dumps(chart_labels),
+        "chart_values":  json.dumps(chart_values),
+    })
 
 
 @login_required
