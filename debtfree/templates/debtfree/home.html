@@ -1,18 +1,39 @@
 {% extends "debtfree/base.html" %}
-{% block title %}DebtFree AI — Início{% endblock %}
+{% block title %}DebtFree AI — Saia das dívidas com um plano claro{% endblock %}
 
 {% block content %}
-<div class="text-center py-20">
-  <h1 class="text-5xl font-bold mb-4">💸 DebtFree AI</h1>
-  <p class="text-gray-500 text-xl mb-10 max-w-md mx-auto">
-    Entenda suas dívidas, conheça seus direitos e negocie com segurança.
+<div class="text-center py-16">
+  <h1 class="text-4xl sm:text-5xl font-bold mb-5 leading-tight">
+    Saia das dívidas<br class="hidden sm:block" /> com um plano claro
+  </h1>
+  <p class="text-gray-500 text-lg mb-10 max-w-md mx-auto leading-relaxed">
+    Diga quanto você ganha e o que você deve. A gente prioriza, explica seus direitos
+    e escreve sua carta de negociação.
   </p>
   <a href="/onboarding/"
-     class="bg-blue-600 text-white px-10 py-4 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition">
+     class="inline-block bg-blue-600 text-white px-10 py-4 rounded-2xl text-lg font-semibold hover:bg-blue-700 transition">
     Começar agora
   </a>
-  <p class="text-gray-400 text-sm mt-8">
-    Mais de 70 milhões de brasileiros estão endividados. Você não precisa enfrentar isso sozinho.
+  <p class="text-gray-400 text-sm mt-5">
+    Grátis&nbsp;•&nbsp;Seus dados não são compartilhados
   </p>
+</div>
+
+<div class="grid grid-cols-3 gap-4 text-center text-sm text-gray-500 mt-4">
+  <div class="card py-5">
+    <p class="text-2xl mb-1">📋</p>
+    <p class="font-medium text-gray-700">Priorize</p>
+    <p class="text-xs mt-1">Saiba qual dívida pagar primeiro</p>
+  </div>
+  <div class="card py-5">
+    <p class="text-2xl mb-1">⚖️</p>
+    <p class="font-medium text-gray-700">Conheça seus direitos</p>
+    <p class="text-xs mt-1">Lei 14.181/2021 explicada</p>
+  </div>
+  <div class="card py-5">
+    <p class="text-2xl mb-1">✉️</p>
+    <p class="font-medium text-gray-700">Negocie</p>
+    <p class="text-xs mt-1">Carta personalizada por IA</p>
+  </div>
 </div>
 {% endblock %}

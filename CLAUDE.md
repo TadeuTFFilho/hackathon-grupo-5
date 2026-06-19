@@ -41,7 +41,7 @@ Prioridade: `session["debt_data"]` → `MOCK_DEBT_DATA[cpf]` → fallback para J
 - `debtfree/rules.py` — priorização de dívidas (PRIORITY_ORDER), classificação da situação financeira (safe/warning/critical), enriquecimento com `type_label` e `is_prescribed`
 - `debtfree/financial_service.py` — BCB API (séries SGS), cálculos de amortização, `financial_summary`, `amortization_tip` por dívida, `prescription_detail` com data exata
 - `debtfree/claude_service.py` — `analyze_debts()` e `generate_letter()` via Anthropic SDK. Cliente criado lazy via `get_client()` para não exigir API key no boot
-- `debtfree/mock_data.py` — `MOCK_USERS` e `MOCK_DEBT_DATA` indexados por CPF. Dois perfis: João (`123.456.789-00`, crítico) e Ana (`987.654.321-00`, atenção). Senha: `senha123`
+- `debtfree/mock_data.py` — `MOCK_USERS` e `MOCK_DEBT_DATA` indexados por CPF. Perfis disponíveis: João (`123.456.789-00`, superendividado crítico) e Ana (`987.654.321-00`, atenção). Senha: `senha123`. Ver `design/personas/personas.md` para os 4 perfis de demo completos (Carlos e Maria ainda não estão no mock).
 - `debtfree/auth.py` — decorator `@login_required` que redireciona para `/login/`
 - `debtfree/context_processors.py` — injeta `current_user` em todos os templates
 
@@ -78,6 +78,22 @@ Definidas em `docs/business-rules.md` e implementadas em `rules.py`:
 - `views.letter` — carta mockada precisa ser substituída por `claude_service.generate_letter()`
 - `financial_service.get_market_rates()` — sem cache; em produção, adicionar `django.core.cache`
 
+## design/ — Copy e Personas
+
+- `design/copy/ui-copy.md` — microcopy oficial de toda a UI. Tom: empático, simples e encorajador. Usar esses textos nos templates — não inventar copy alternativo.
+- `design/copy/legal-disclaimer.md` — disclaimers legais obrigatórios em três versões: curta (rodapé), média (abaixo da análise) e prescrição (quando `is_prescribed` for verdadeiro). Exibir conforme o contexto.
+- `design/personas/personas.md` — 4 personas para demo e testes: Carlos (🟡 controlado), Ana (🟠 atenção, risco despejo), João (🔴 superendividado crítico), Maria (🟡 dívida prescrita — edge case para testar flag de prescrição). Os perfis João e Ana têm equivalentes em `mock_data.py`; Carlos e Maria são apenas referência de demo.
+
+## backend/src/services/claudeService.js
+
+Implementação Node.js da integração com Claude — **ativa**, não residual. Contém:
+- `analyzeDebts({ monthlyIncome, debts, prioritized, situation })` — retorna JSON com `summary`, `legalRights`, `actionPlan` (3 passos) e `negotiationTip`
+- `generateNegotiationLetter({ debt, monthlyIncome, userName })` — retorna texto da carta de negociação
+- Modelo: `claude-opus-4-8`. System prompt compartilhado define persona empática e limites (orientação educativa, não consultoria jurídica).
+- `parseJsonResponse()` — extrai JSON resiliente (remove markdown fences se presentes).
+
+A versão Python equivalente está em `debtfree/claude_service.py` (usa Anthropic SDK Python). Os prompts canônicos vivem no arquivo JS acima — ao ajustar tom ou estrutura de resposta, manter os dois em sincronia.
+
 ## Arquivos residuais (ignorar)
 
-`backend/` (Elixir/Phoenix) e `frontend/` (Next.js) são versões anteriores descartadas da stack. A aplicação ativa é inteiramente o projeto Django na raiz.
+`frontend/` (Next.js) é versão anterior descartada da stack. A aplicação ativa é o projeto Django na raiz; `backend/` contém o serviço Node.js da integração Claude.

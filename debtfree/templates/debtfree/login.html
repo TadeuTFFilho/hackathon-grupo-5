@@ -17,25 +17,24 @@
 
     <div>
       <label class="block text-sm text-gray-600 mb-1">CPF</label>
-      <input type="text" name="cpf" placeholder="123.456.789-00" required
-             class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm" />
+      <input type="text" name="cpf" placeholder="123.456.789-00" required class="input" />
     </div>
 
     <div>
       <label class="block text-sm text-gray-600 mb-1">Senha</label>
-      <input type="password" name="password" placeholder="••••••••" required
-             class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm" />
+      <input type="password" name="password" placeholder="••••••••" required class="input" />
     </div>
 
     <button type="submit" class="w-full btn-primary py-3 text-base">Entrar</button>
   </form>
 
-  {# Atalho para demo — Flora: pode esconder em produção #}
-  <div class="mt-6 card bg-blue-50 border border-blue-200 text-sm">
+  <div class="mt-6 card bg-blue-50 border border-blue-200 text-sm space-y-1">
     <p class="font-medium text-blue-800 mb-2">🧪 Contas de demo</p>
-    <p class="text-blue-700">CPF: <code>123.456.789-00</code> — João (crítico)</p>
-    <p class="text-blue-700">CPF: <code>987.654.321-00</code> — Ana (atenção)</p>
-    <p class="text-blue-500 text-xs mt-1">Senha para ambos: <code>senha123</code></p>
+    <p class="text-blue-700"><code>123.456.789-00</code> — João (🔴 superendividado)</p>
+    <p class="text-blue-700"><code>987.654.321-00</code> — Ana (🟡 atenção)</p>
+    <p class="text-blue-700"><code>000.000.001-00</code> — Carlos (🟢 controlado)</p>
+    <p class="text-blue-700"><code>000.000.002-00</code> — Maria (🟢 dívida prescrita)</p>
+    <p class="text-blue-500 text-xs mt-2">Senha para todos: <code>senha123</code></p>
   </div>
 </div>
 {% endblock %}

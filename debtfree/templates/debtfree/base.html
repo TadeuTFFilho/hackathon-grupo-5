@@ -6,30 +6,27 @@
   <title>{% block title %}DebtFree AI{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /*
-     * Classes semânticas — Flora: substitua os valores por tokens do design system.
-     * Todas as telas usam essas classes, então uma mudança aqui afeta tudo.
-     */
-
     /* Cards */
     .card { @apply bg-white rounded-2xl p-6 shadow-sm; }
     .section-title { @apply font-semibold text-lg; }
 
-    /* Badges */
+    /* Badges de situação */
     .situation-badge { @apply inline-block px-4 py-1 rounded-full font-semibold text-sm; }
-    .badge-prescribed { @apply text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full; }
+    .badge-prescribed { @apply text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium; }
+    .badge-risk { @apply text-xs px-2 py-0.5 rounded-full font-medium; }
+    .badge-priority { @apply text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium; }
 
     /* Linhas de dívida */
     .debt-row { @apply flex items-center gap-4 p-4 rounded-xl border; }
     .debt-row--urgent { @apply bg-red-50 border-red-200; }
     .debt-row--high   { @apply bg-orange-50 border-orange-200; }
     .debt-row--normal { @apply bg-gray-50 border-gray-200; }
-    .debt-rank   { @apply w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm shrink-0; }
-    .debt-info   { @apply flex-1 flex flex-col gap-0.5; }
+    .debt-rank    { @apply w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm shrink-0; }
+    .debt-info    { @apply flex-1 flex flex-col gap-0.5; }
     .debt-creditor { @apply font-semibold; }
-    .debt-type   { @apply text-sm text-gray-500; }
+    .debt-type    { @apply text-sm text-gray-500; }
     .debt-actions { @apply text-right shrink-0; }
-    .debt-amount { @apply font-bold; }
+    .debt-amount  { @apply font-bold; }
 
     /* Passos do plano de ação */
     .action-step   { @apply flex gap-4 items-start; }
@@ -43,24 +40,33 @@
     .btn-primary   { @apply bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition; }
     .btn-secondary { @apply border border-gray-300 text-gray-700 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition; }
     .btn-ghost     { @apply text-blue-600 text-sm font-medium hover:underline; }
+
+    /* Inputs */
+    .input { @apply w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm; }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans text-gray-900">
+<body class="bg-gray-50 min-h-screen font-sans text-gray-900 flex flex-col">
 
   <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-    {# Flora: substituir por header completo com logo e navegação #}
     <a href="/" class="text-xl font-bold text-blue-600">💸 DebtFree AI</a>
     {% if current_user %}
     <div class="flex items-center gap-4 text-sm">
       <span class="text-gray-500">{{ current_user.name }}</span>
-      <a href="/logout/" class="text-gray-400 hover:text-gray-600">Sair</a>
+      <a href="/logout/" class="text-gray-400 hover:text-gray-600 transition">Sair</a>
     </div>
     {% endif %}
   </nav>
 
-  <main class="max-w-3xl mx-auto px-4 py-10">
+  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-10">
     {% block content %}{% endblock %}
   </main>
+
+  <footer class="border-t border-gray-200 bg-white px-6 py-5 text-center mt-4">
+    <p class="text-xs text-gray-400 max-w-2xl mx-auto leading-relaxed">
+      O DebtFree AI oferece orientação educativa e não substitui consultoria jurídica.
+      Para decisões importantes, procure a <strong>Defensoria Pública</strong>, o <strong>PROCON</strong> ou um advogado.
+    </p>
+  </footer>
 
 </body>
 </html>

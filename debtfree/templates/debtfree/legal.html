@@ -4,21 +4,34 @@
 {% block content %}
 
 <div class="mb-6">
-  <a href="/dashboard/" class="text-sm text-gray-400 hover:text-gray-600">← Voltar ao dashboard</a>
+  <a href="/dashboard/" class="text-sm text-gray-400 hover:text-gray-600 transition">← Voltar ao dashboard</a>
   <h2 class="text-3xl font-bold mt-2">Seus direitos</h2>
   <p class="text-gray-500 text-sm mt-1">Lei 14.181/2021 — Lei do Superendividamento</p>
 </div>
 
+{# ── Aviso de prescrição (topo, quando houver) ── #}
+{% if prescribed_debts %}
+<section class="card mb-6 border-l-4 border-purple-400 bg-purple-50">
+  <p class="text-sm text-purple-800 leading-relaxed">
+    ⚠️ Uma ou mais das suas dívidas podem estar <strong>prescritas</strong> (vencidas há mais de 5 anos).
+    Dívidas prescritas não podem mais ser cobradas judicialmente, mas pagar ou reconhecer a dívida pode
+    reiniciar o prazo. <strong>Não faça acordo antes de confirmar a prescrição</strong> com um orientador jurídico.
+  </p>
+</section>
+{% endif %}
+
 {# ── Situação atual ── #}
+{% if analysis.legal_rights %}
 <section class="card mb-6">
   <h3 class="section-title">Sua situação</h3>
   <p class="text-gray-600 mt-2">{{ analysis.legal_rights }}</p>
 </section>
+{% endif %}
 
 {# ── O que a lei garante ── #}
 <section class="card mb-6">
   <h3 class="section-title">O que a Lei 14.181/2021 garante</h3>
-  <ul class="mt-4 space-y-3">
+  <ul class="mt-4 space-y-4">
     <li class="legal-item">
       <span class="legal-icon">🔄</span>
       <div>
@@ -51,7 +64,7 @@
     <li class="legal-item">
       <span class="legal-icon">🤝</span>
       <div>
-        <p class="font-medium">Audiência de conciliação</p>
+        <p class="font-medium">Audiência de conciliação obrigatória</p>
         <p class="text-sm text-gray-500">
           Os credores são obrigados a comparecer e negociar. Você não precisa aceitar
           a primeira proposta.
@@ -61,24 +74,27 @@
   </ul>
 </section>
 
-{# ── Dívidas prescritas ── #}
+{# ── Dívidas possivelmente prescritas ── #}
 {% if prescribed_debts %}
 <section class="card mb-6 border-l-4 border-purple-400">
   <h3 class="section-title">Dívidas que podem estar prescritas</h3>
   <p class="text-sm text-gray-500 mt-1">
     Dívidas com mais de 5 anos não podem mais ser cobradas judicialmente.
-    Confirme as datas antes de pagar.
+    Confirme as datas antes de pagar ou fazer qualquer acordo.
   </p>
   <ul class="mt-4 space-y-2">
     {% for debt in prescribed_debts %}
-    <li class="flex justify-between text-sm">
-      <span class="font-medium">{{ debt.creditor }}</span>
+    <li class="flex justify-between text-sm items-center">
+      <span class="font-medium flex items-center gap-2">
+        <span class="badge-prescribed">prescrita</span>
+        {{ debt.creditor }}
+      </span>
       <span class="text-gray-500">R$ {{ debt.total_amount }}</span>
     </li>
     {% endfor %}
   </ul>
   <p class="text-xs text-gray-400 mt-3">
-    ⚠️ Mesmo prescrita, a dívida pode aparecer no seu histórico. Consulte um advogado ou o PROCON.
+    ⚠️ Mesmo prescrita, a dívida pode aparecer no seu histórico de crédito. Consulte um advogado ou o PROCON antes de qualquer decisão.
   </p>
 </section>
 {% endif %}
@@ -86,11 +102,35 @@
 {# ── Onde buscar ajuda ── #}
 <section class="card mb-6">
   <h3 class="section-title">Onde buscar ajuda gratuita</h3>
-  <ul class="mt-4 space-y-2 text-sm text-gray-700">
-    <li>🏛️ <strong>Defensoria Pública</strong> — representação judicial gratuita</li>
-    <li>📋 <strong>PROCON</strong> — mediação e orientação ao consumidor</li>
-    <li>🤝 <strong>CPC (Centro de Práticas Conciliatórias)</strong> — conciliação extrajudicial</li>
-    <li>💳 <strong>Feirão Serasa</strong> — descontos de até 99% em dívidas negativadas</li>
+  <ul class="mt-4 space-y-3 text-sm text-gray-700">
+    <li class="legal-item">
+      <span class="legal-icon">🏛️</span>
+      <div>
+        <p class="font-medium">Defensoria Pública</p>
+        <p class="text-gray-500">Atendimento jurídico gratuito — representação em juízo sem custo</p>
+      </div>
+    </li>
+    <li class="legal-item">
+      <span class="legal-icon">📋</span>
+      <div>
+        <p class="font-medium">PROCON</p>
+        <p class="text-gray-500">Defesa do consumidor — mediação e orientação extrajudicial</p>
+      </div>
+    </li>
+    <li class="legal-item">
+      <span class="legal-icon">🤝</span>
+      <div>
+        <p class="font-medium">CRAS (Centro de Referência de Assistência Social)</p>
+        <p class="text-gray-500">Assistência social do município — apoio em situações de vulnerabilidade</p>
+      </div>
+    </li>
+    <li class="legal-item">
+      <span class="legal-icon">💳</span>
+      <div>
+        <p class="font-medium">Feirões de renegociação</p>
+        <p class="text-gray-500">Serasa Limpa Nome, Desenrola — descontos de até 99% em dívidas negativadas</p>
+      </div>
+    </li>
   </ul>
 </section>
 

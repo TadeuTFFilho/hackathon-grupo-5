@@ -152,13 +152,16 @@ def dashboard(request):
     chart_labels = [d["creditor"] for d in prioritized]
     chart_values = [d["total_amount"] for d in prioritized]
 
+    has_prescribed = any(d.get("is_prescribed") for d in prioritized)
+
     return render(request, "debtfree/dashboard.html", {
         **debt_data,
-        "user":          user,
-        "market":        market,
-        "summary":       summary,
-        "chart_labels":  json.dumps(chart_labels),
-        "chart_values":  json.dumps(chart_values),
+        "user":           user,
+        "market":         market,
+        "summary":        summary,
+        "chart_labels":   json.dumps(chart_labels),
+        "chart_values":   json.dumps(chart_values),
+        "has_prescribed": has_prescribed,
     })
 
 
