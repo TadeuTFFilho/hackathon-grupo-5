@@ -1,0 +1,32 @@
+{
+  "name": "QuitAI",
+  "short_name": "QuitAI",
+  "description": "Organize suas dívidas e entenda seus direitos. Lei 14.181/2021.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8F7F5",
+  "theme_color": "#2C8377",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/static/debtfree/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Início",
+      "url": "/dashboard/",
+      "description": "Ver resumo financeiro"
+    },
+    {
+      "name": "Minhas Dívidas",
+      "url": "/onboarding/",
+      "description": "Gerenciar dívidas"
+    }
+  ]
+}

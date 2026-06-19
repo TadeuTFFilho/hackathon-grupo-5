@@ -1,72 +1,228 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}DebtFree AI{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>{% block title %}QuitAI{% endblock %}</title>
+
+  {# ── Fontes ── #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  {# ── PWA ── #}
+  <link rel="manifest" href="{% static 'debtfree/manifest.json' %}" />
+  <meta name="theme-color" content="#2C8377" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="QuitAI" />
+  <link rel="apple-touch-icon" href="{% static 'debtfree/icon.svg' %}" />
+
+  {# ── Tailwind CDN ── #}
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Cards */
-    .card { @apply bg-white rounded-2xl p-6 shadow-sm; }
-    .section-title { @apply font-semibold text-lg; }
+  <script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          teal: {
+            50:  '#EBF5F4',
+            100: '#C9E6E3',
+            200: '#A0D3CE',
+            500: '#2C8377',
+            600: '#246D65',
+            700: '#1D5850',
+          },
+          warm: {
+            50:  '#F8F7F5',
+            100: '#F0EDE9',
+            200: '#E2DDD7',
+            300: '#C9C3BB',
+          },
+          sand: {
+            50:  '#FDF9F4',
+            100: '#F5EDE3',
+            200: '#EAD9C5',
+          }
+        },
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        }
+      }
+    }
+  }
+  </script>
 
-    /* Badges de situação */
-    .situation-badge { @apply inline-block px-4 py-1 rounded-full font-semibold text-sm; }
-    .badge-prescribed { @apply text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium; }
-    .badge-risk { @apply text-xs px-2 py-0.5 rounded-full font-medium; }
-    .badge-priority { @apply text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium; }
+  <style type="text/tailwindcss">
+    /* ── Cards ── */
+    .card         { @apply bg-white rounded-[14px] p-5 shadow-sm border border-warm-100; }
+    .card-teal    { @apply bg-teal-700 rounded-[14px] p-5 text-white; }
+    .section-title { @apply font-semibold text-[15px] text-gray-900; }
 
-    /* Linhas de dívida */
-    .debt-row { @apply flex items-center gap-4 p-4 rounded-xl border; }
-    .debt-row--urgent { @apply bg-red-50 border-red-200; }
-    .debt-row--high   { @apply bg-orange-50 border-orange-200; }
-    .debt-row--normal { @apply bg-gray-50 border-gray-200; }
-    .debt-rank    { @apply w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm shrink-0; }
-    .debt-info    { @apply flex-1 flex flex-col gap-0.5; }
-    .debt-creditor { @apply font-semibold; }
-    .debt-type    { @apply text-sm text-gray-500; }
-    .debt-actions { @apply text-right shrink-0; }
-    .debt-amount  { @apply font-bold; }
+    /* ── Buttons — pill ── */
+    .btn-primary   { @apply bg-teal-500 text-white px-6 py-2.5 rounded-full text-sm font-semibold
+                            hover:bg-teal-600 active:scale-[0.98] transition-all duration-150 shadow-sm; }
+    .btn-secondary { @apply border border-warm-200 text-stone-700 px-6 py-2.5 rounded-full text-sm font-medium
+                            hover:bg-warm-100 active:scale-[0.98] transition-all duration-150; }
+    .btn-ghost     { @apply text-teal-600 text-sm font-medium hover:underline transition-all duration-150; }
 
-    /* Passos do plano de ação */
+    /* ── Inputs ── */
+    .input { @apply w-full border border-warm-200 rounded-[10px] px-4 py-2.5 text-sm text-gray-900
+                    placeholder-gray-400 bg-white focus:outline-none focus:ring-2
+                    focus:ring-teal-200 focus:border-teal-400 transition-all duration-150; }
+
+    /* ── Debt rows ── */
+    .debt-row          { @apply flex items-start gap-4 p-4 rounded-[14px] border; }
+    .debt-row--urgent  { @apply bg-red-50 border-red-200; }
+    .debt-row--high    { @apply bg-amber-50 border-amber-200; }
+    .debt-row--normal  { @apply bg-warm-50 border-warm-200; }
+    .debt-rank         { @apply w-8 h-8 rounded-full bg-warm-100 flex items-center justify-center
+                                font-bold text-sm shrink-0 text-stone-600; }
+    .debt-info         { @apply flex-1 flex flex-col gap-0.5; }
+    .debt-creditor     { @apply font-semibold text-gray-900; }
+    .debt-type         { @apply text-sm text-gray-500; }
+    .debt-actions      { @apply text-right shrink-0; }
+    .debt-amount       { @apply font-bold text-gray-900 tabular-nums; }
+
+    /* ── Action plan ── */
     .action-step   { @apply flex gap-4 items-start; }
-    .action-number { @apply w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0; }
+    .action-number { @apply w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center
+                            font-bold text-sm shrink-0; }
 
-    /* Itens de direitos legais */
-    .legal-item { @apply flex gap-3 items-start; }
-    .legal-icon { @apply text-xl shrink-0; }
+    /* ── Status badges ── */
+    .situation-badge   { @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-semibold text-sm; }
+    .badge-prescribed  { @apply text-xs bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full font-medium; }
+    .badge-priority    { @apply text-xs bg-teal-100 text-teal-700 px-2.5 py-0.5 rounded-full font-medium; }
 
-    /* Botões */
-    .btn-primary   { @apply bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition; }
-    .btn-secondary { @apply border border-gray-300 text-gray-700 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition; }
-    .btn-ghost     { @apply text-blue-600 text-sm font-medium hover:underline; }
+    /* ── Tone helpers ── */
+    .tone-safe      { @apply bg-emerald-50 text-emerald-800 border border-emerald-200; }
+    .tone-attention { @apply bg-amber-50  text-amber-800  border border-amber-200; }
+    .tone-critical  { @apply bg-red-50    text-red-800    border border-red-200; }
+    .tone-info      { @apply bg-teal-50   text-teal-800   border border-teal-100; }
 
-    /* Inputs */
-    .input { @apply w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm; }
+    /* ── Safe area iOS ── */
+    .pb-safe { padding-bottom: max(1.25rem, env(safe-area-inset-bottom)); }
+
+    /* ── Tabular nums for money ── */
+    .tabular { font-variant-numeric: tabular-nums; }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans text-gray-900 flex flex-col">
 
-  <nav class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-    <a href="/" class="text-xl font-bold text-blue-600">💸 DebtFree AI</a>
-    {% if current_user %}
-    <div class="flex items-center gap-4 text-sm">
-      <span class="text-gray-500">{{ current_user.name }}</span>
-      <a href="/logout/" class="text-gray-400 hover:text-gray-600 transition">Sair</a>
+<body class="bg-warm-50 min-h-screen font-sans text-gray-900 antialiased">
+
+  {# ── Navbar — apenas desktop ── #}
+  <nav class="hidden md:block bg-white border-b border-warm-100">
+    <div class="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
+
+      <a href="{% url 'home' %}" class="flex items-center gap-2 shrink-0 group">
+        <div class="w-8 h-8 bg-teal-500 rounded-xl flex items-center justify-center group-hover:bg-teal-600 transition">
+          <i data-lucide="trending-up" class="w-4 h-4 text-white"></i>
+        </div>
+        <span class="text-base font-bold text-gray-900">QuitAI</span>
+      </a>
+
+      {% if current_user %}
+      <div class="flex items-center gap-0.5 text-sm flex-1 justify-center">
+        <a href="{% url 'dashboard' %}"
+           class="px-3 py-2 rounded-lg font-medium transition-all duration-150
+                  {% if request.resolver_match.url_name == 'dashboard' %}text-teal-600 bg-teal-50{% else %}text-gray-500 hover:text-teal-600 hover:bg-teal-50{% endif %}">
+          Início
+        </a>
+        <a href="{% url 'onboarding' %}"
+           class="px-3 py-2 rounded-lg font-medium transition-all duration-150
+                  {% if request.resolver_match.url_name == 'onboarding' %}text-teal-600 bg-teal-50{% else %}text-gray-500 hover:text-teal-600 hover:bg-teal-50{% endif %}">
+          Dívidas
+        </a>
+        <a href="{% url 'legal' %}"
+           class="px-3 py-2 rounded-lg font-medium transition-all duration-150
+                  {% if request.resolver_match.url_name == 'legal' %}text-teal-600 bg-teal-50{% else %}text-gray-500 hover:text-teal-600 hover:bg-teal-50{% endif %}">
+          Direitos
+        </a>
+      </div>
+
+      <a href="{% url 'perfil' %}"
+         class="flex items-center gap-2 shrink-0 group px-3 py-1.5 rounded-xl hover:bg-warm-100 transition-all duration-150
+                {% if request.resolver_match.url_name == 'perfil' %}bg-warm-100{% endif %}">
+        <div class="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-xs shrink-0">
+          {{ current_user.name|first|upper }}
+        </div>
+        <span class="text-gray-700 text-sm font-medium hidden lg:block">{{ current_user.name|truncatewords:1 }}</span>
+      </a>
+
+      {% else %}
+      <a href="{% url 'login' %}" class="btn-primary">Entrar</a>
+      {% endif %}
+
     </div>
-    {% endif %}
   </nav>
 
-  <main class="flex-1 max-w-3xl mx-auto w-full px-4 py-10">
+  {# ── Conteúdo principal ── #}
+  <main class="max-w-5xl mx-auto px-5 pt-6 pb-28 md:py-10">
     {% block content %}{% endblock %}
   </main>
 
-  <footer class="border-t border-gray-200 bg-white px-6 py-5 text-center mt-4">
-    <p class="text-xs text-gray-400 max-w-2xl mx-auto leading-relaxed">
-      O DebtFree AI oferece orientação educativa e não substitui consultoria jurídica.
-      Para decisões importantes, procure a <strong>Defensoria Pública</strong>, o <strong>PROCON</strong> ou um advogado.
+  {# ── Tab bar mobile — 3 itens (Início / Dívidas / Perfil) ── #}
+  {% if current_user %}
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-warm-100 pb-safe">
+    <div class="grid grid-cols-3 h-16">
+      {% with active=request.resolver_match.url_name %}
+
+      {# Início #}
+      <a href="{% url 'dashboard' %}"
+         class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150
+                {% if active == 'dashboard' %}text-teal-600{% else %}text-warm-300 hover:text-gray-500{% endif %}">
+        <i data-lucide="home" class="w-5 h-5"></i>
+        <span class="text-[11px] font-medium">Início</span>
+        {% if active == 'dashboard' %}<span class="w-1.5 h-1.5 rounded-full bg-teal-500 mt-0.5"></span>{% endif %}
+      </a>
+
+      {# Dívidas #}
+      <a href="{% url 'onboarding' %}"
+         class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150
+                {% if active == 'onboarding' or active == 'analyze' %}text-teal-600{% else %}text-warm-300 hover:text-gray-500{% endif %}">
+        <i data-lucide="credit-card" class="w-5 h-5"></i>
+        <span class="text-[11px] font-medium">Dívidas</span>
+        {% if active == 'onboarding' or active == 'analyze' %}<span class="w-1.5 h-1.5 rounded-full bg-teal-500 mt-0.5"></span>{% endif %}
+      </a>
+
+      {# Perfil #}
+      <a href="{% url 'perfil' %}"
+         class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150
+                {% if active == 'perfil' %}text-teal-600{% else %}text-warm-300 hover:text-gray-500{% endif %}">
+        <i data-lucide="user" class="w-5 h-5"></i>
+        <span class="text-[11px] font-medium">Perfil</span>
+        {% if active == 'perfil' %}<span class="w-1.5 h-1.5 rounded-full bg-teal-500 mt-0.5"></span>{% endif %}
+      </a>
+
+      {% endwith %}
+    </div>
+  </nav>
+  {% endif %}
+
+  {# ── Footer disclaimer — oculto no mobile ── #}
+  <footer class="hidden md:block border-t border-warm-100 bg-white py-4 px-6">
+    <p class="text-xs text-gray-400 text-center max-w-3xl mx-auto">
+      Esta ferramenta oferece orientação informativa e não substitui apoio jurídico ou financeiro especializado.
+      Para decisões importantes, consulte a <strong class="text-gray-500">Defensoria Pública</strong>,
+      o <strong class="text-gray-500">PROCON</strong> ou um advogado.
     </p>
   </footer>
+
+  {# ── Lucide Icons ── #}
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script>lucide.createIcons();</script>
+
+  {# ── Service Worker ── #}
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+          .catch(err => console.warn('SW não registrado:', err));
+      });
+    }
+  </script>
 
 </body>
 </html>

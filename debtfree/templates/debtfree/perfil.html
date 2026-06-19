@@ -1,0 +1,131 @@
+{% extends "debtfree/base.html" %}
+{% block title %}QuitAI — Perfil{% endblock %}
+
+{% block content %}
+
+<div class="mb-8">
+  <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Conta</p>
+  <h2 class="text-2xl font-bold text-gray-900">Perfil</h2>
+</div>
+
+{# ── Avatar + dados ── #}
+<div class="card mb-5">
+  <div class="flex items-center gap-4 mb-6 pb-5 border-b border-warm-100">
+    <div class="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-2xl shrink-0">
+      {{ user.name|first|upper }}
+    </div>
+    <div>
+      <p class="text-xl font-bold text-gray-900">{{ user.name }}</p>
+      <p class="text-sm text-gray-500 mt-0.5">CPF: {{ user.cpf|slice:":3" }}.***.***-{{ user.cpf|slice:"-2:" }}</p>
+    </div>
+  </div>
+
+  <div class="space-y-4">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="mail" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">E-mail</p>
+        <p class="text-sm text-gray-900">{{ user.email }}</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="phone" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">Telefone</p>
+        <p class="text-sm text-gray-900">{{ user.phone }}</p>
+      </div>
+    </div>
+
+    {% if monthly_income %}
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-warm-100 rounded-lg flex items-center justify-center shrink-0">
+        <i data-lucide="wallet" class="w-4 h-4 text-gray-500"></i>
+      </div>
+      <div>
+        <p class="text-xs text-gray-400 uppercase tracking-wide font-medium">Renda mensal</p>
+        <p class="text-sm text-gray-900 tabular font-semibold">{{ monthly_income|brl }}</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{# ── Ações rápidas ── #}
+<div class="card mb-5">
+  <h3 class="section-title mb-4">Configurações</h3>
+  <div class="space-y-2">
+
+    <a href="{% url 'renda' %}"
+       class="flex items-center justify-between p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150 group">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+          <i data-lucide="wallet" class="w-4 h-4 text-teal-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900">Atualizar renda</p>
+          <p class="text-xs text-gray-500">Mantenha seus dados precisos</p>
+        </div>
+      </div>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-teal-500 transition"></i>
+    </a>
+
+    <a href="{% url 'onboarding' %}"
+       class="flex items-center justify-between p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150 group">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+          <i data-lucide="credit-card" class="w-4 h-4 text-teal-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900">Editar dívidas</p>
+          <p class="text-xs text-gray-500">Adicionar ou remover dívidas</p>
+        </div>
+      </div>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-teal-500 transition"></i>
+    </a>
+
+    <a href="{% url 'legal' %}"
+       class="flex items-center justify-between p-3 rounded-[10px] hover:bg-warm-50 transition-all duration-150 group">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+          <i data-lucide="shield" class="w-4 h-4 text-teal-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-900">Seus direitos</p>
+          <p class="text-xs text-gray-500">Lei 14.181/2021 — Superendividamento</p>
+        </div>
+      </div>
+      <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400 group-hover:text-teal-500 transition"></i>
+    </a>
+
+  </div>
+</div>
+
+{# ── Sair ── #}
+<div class="card border border-red-100">
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-sm font-medium text-gray-900">Sair da conta</p>
+      <p class="text-xs text-gray-500 mt-0.5">Seus dados permanecem salvos</p>
+    </div>
+    <a href="{% url 'logout' %}"
+       class="flex items-center gap-2 border border-red-200 text-red-600 hover:bg-red-50
+              px-4 py-2 rounded-full text-sm font-medium transition-all duration-150">
+      <i data-lucide="log-out" class="w-4 h-4"></i>
+      Sair
+    </a>
+  </div>
+</div>
+
+{# ── Disclaimer ── #}
+<div class="mt-6 text-center">
+  <p class="text-xs text-gray-400 max-w-sm mx-auto leading-relaxed">
+    Esta ferramenta oferece orientação informativa e não substitui apoio jurídico ou financeiro especializado.
+  </p>
+</div>
+
+{% endblock %}

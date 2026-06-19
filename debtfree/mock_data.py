@@ -9,18 +9,14 @@ CPFs gerados aleatoriamente e inválidos — não representam pessoas reais.
 # ---------------------------------------------------------------------------
 
 MOCK_USERS = {
+    # Persona 3 — João, superendividado crítico
     "123.456.789-00": {
-        # Credenciais
         "cpf":      "123.456.789-00",
         "password": "senha123",
-
-        # Dados pessoais
         "name":       "João Silva",
         "email":      "joao.silva@email.com",
         "phone":      "(11) 98765-4321",
         "birthdate":  "1985-03-15",
-
-        # Endereço (usado na carta de negociação)
         "address": {
             "street":       "Rua das Flores, 142, Apto 3",
             "neighborhood": "Vila Madalena",
@@ -28,21 +24,18 @@ MOCK_USERS = {
             "state":        "SP",
             "zip":          "05435-000",
         },
-
-        # Situação financeira
         "monthly_income": 1800,
-        "debt_data": None,   # preenchido após análise
+        "debt_data": None,
     },
 
+    # Persona 2 — Ana, atenção
     "987.654.321-00": {
         "cpf":      "987.654.321-00",
         "password": "senha123",
-
         "name":      "Ana Pereira",
         "email":     "ana.pereira@email.com",
         "phone":     "(21) 97654-3210",
         "birthdate": "1990-07-22",
-
         "address": {
             "street":       "Av. Brasil, 890, Casa",
             "neighborhood": "Méier",
@@ -50,51 +43,44 @@ MOCK_USERS = {
             "state":        "RJ",
             "zip":          "20785-002",
         },
-
         "monthly_income": 2800,
         "debt_data": None,
     },
 
-    # Carlos — endividado leve (Persona 1 — 🟡 Controlado)
-    "000.000.001-00": {
-        "cpf":      "000.000.001-00",
+    # Persona 1 — Carlos, controlado
+    "111.222.333-00": {
+        "cpf":      "111.222.333-00",
         "password": "senha123",
-
         "name":      "Carlos Mendes",
         "email":     "carlos.mendes@email.com",
-        "phone":     "(11) 91234-5678",
-        "birthdate": "1988-11-03",
-
+        "phone":     "(31) 99123-4567",
+        "birthdate": "1992-11-08",
         "address": {
-            "street":       "Rua Augusta, 521, Apto 12",
-            "neighborhood": "Consolação",
-            "city":         "São Paulo",
-            "state":        "SP",
-            "zip":          "01305-000",
+            "street":       "Rua Paraíba, 550, Apto 12",
+            "neighborhood": "Funcionários",
+            "city":         "Belo Horizonte",
+            "state":        "MG",
+            "zip":          "30130-140",
         },
-
         "monthly_income": 4000,
         "debt_data": None,
     },
 
-    # Maria — dívida prescrita (Persona 4 — edge case)
-    "000.000.002-00": {
-        "cpf":      "000.000.002-00",
+    # Persona 4 — Maria, dívida prescrita (edge case)
+    "444.555.666-00": {
+        "cpf":      "444.555.666-00",
         "password": "senha123",
-
-        "name":      "Maria Santos",
-        "email":     "maria.santos@email.com",
-        "phone":     "(31) 98765-1234",
-        "birthdate": "1982-05-14",
-
+        "name":      "Maria Oliveira",
+        "email":     "maria.oliveira@email.com",
+        "phone":     "(85) 98876-5432",
+        "birthdate": "1988-04-14",
         "address": {
-            "street":       "Rua dos Inconfidentes, 300, Casa",
-            "neighborhood": "Savassi",
-            "city":         "Belo Horizonte",
-            "state":        "MG",
-            "zip":          "30140-120",
+            "street":       "Rua das Acácias, 33",
+            "neighborhood": "Aldeota",
+            "city":         "Fortaleza",
+            "state":        "CE",
+            "zip":          "60150-160",
         },
-
         "monthly_income": 3200,
         "debt_data": None,
     },
@@ -105,14 +91,11 @@ MOCK_USERS = {
 # ---------------------------------------------------------------------------
 
 MOCK_DEBT_DATA = {
+
     # João — superendividado crítico (Persona 3)
     "123.456.789-00": {
         "monthly_income": 1800,
-        "situation": {
-            "level": "critical",
-            "label": "Superendividado",
-            "color": "red",
-        },
+        "situation": {"level": "critical", "label": "Superendividado", "color": "red"},
         "prioritized": [
             {
                 "id": 0,
@@ -121,6 +104,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Pensão Alimentícia",
                 "total_amount": 6000,
                 "monthly_payment": 800,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
@@ -130,6 +114,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Financiamento (imóvel)",
                 "total_amount": 18000,
                 "monthly_payment": 650,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
@@ -139,6 +124,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Cartão de Crédito",
                 "total_amount": 4200,
                 "monthly_payment": 300,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
@@ -148,6 +134,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Loja / Comércio",
                 "total_amount": 2300,
                 "monthly_payment": 0,
+                "due_date": "2018-03-01",
                 "is_prescribed": True,
             },
             {
@@ -157,6 +144,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Empréstimo Bancário",
                 "total_amount": 9500,
                 "monthly_payment": 480,
+                "due_date": None,
                 "is_prescribed": False,
             },
         ],
@@ -172,21 +160,9 @@ MOCK_DEBT_DATA = {
                 "Nenhum credor pode te cobrar valores que comprometam seu mínimo existencial (equivalente a 1 salário mínimo)."
             ),
             "action_plan": [
-                {
-                    "step": 1,
-                    "action": "Regularize a pensão alimentícia",
-                    "reason": "É a única dívida que pode resultar em prisão. Prioridade máxima.",
-                },
-                {
-                    "step": 2,
-                    "action": "Entre em contato com a CEF sobre o financiamento",
-                    "reason": "Risco de perder o imóvel. Bancos públicos costumam ter programas de renegociação.",
-                },
-                {
-                    "step": 3,
-                    "action": "Procure o PROCON ou Defensoria Pública",
-                    "reason": "Com sua renda, você tem direito à repactuação judicial gratuita pela Lei 14.181/2021.",
-                },
+                {"step": 1, "action": "Regularize a pensão alimentícia", "reason": "É a única dívida que pode resultar em prisão. Prioridade máxima."},
+                {"step": 2, "action": "Entre em contato com a CEF sobre o financiamento", "reason": "Risco de perder o imóvel. Bancos públicos costumam ter programas de renegociação."},
+                {"step": 3, "action": "Procure o PROCON ou Defensoria Pública", "reason": "Com sua renda, você tem direito à repactuação judicial gratuita pela Lei 14.181/2021."},
             ],
             "negotiation_tip": (
                 "Para o Nubank e o Bradesco, ofereça 40% do valor à vista — "
@@ -196,76 +172,10 @@ MOCK_DEBT_DATA = {
         },
     },
 
-    # Carlos — endividado leve (Persona 1 — controlado)
-    "000.000.001-00": {
-        "monthly_income": 4000,
-        "situation": {
-            "level": "safe",
-            "label": "Controlado",
-            "color": "green",
-        },
-        "prioritized": [
-            {
-                "id": 0,
-                "creditor": "Nubank",
-                "type": "cartao_credito",
-                "type_label": "Cartão de Crédito",
-                "total_amount": 3200,
-                "monthly_payment": 200,
-                "is_prescribed": False,
-            },
-            {
-                "id": 1,
-                "creditor": "C&A",
-                "type": "loja_comercio",
-                "type_label": "Loja / Comércio",
-                "total_amount": 800,
-                "monthly_payment": 270,
-                "is_prescribed": False,
-            },
-        ],
-        "analysis": {
-            "summary": (
-                "Suas dívidas comprometem 11,7% da sua renda mensal — você está sob controle. "
-                "O cartão Nubank cobra juros altos: quite-o antes que a situação mude."
-            ),
-            "legal_rights": (
-                "Mesmo com as dívidas sob controle, a Lei 14.181/2021 garante seu direito "
-                "à revisão de juros abusivos em contratos de cartão de crédito. "
-                "Você pode solicitar informações claras sobre os juros cobrados e exigir renegociação."
-            ),
-            "action_plan": [
-                {
-                    "step": 1,
-                    "action": "Quite o cartão Nubank o quanto antes",
-                    "reason": "Juros de cartão de crédito (média 15%/mês) consomem sua capacidade de poupança.",
-                },
-                {
-                    "step": 2,
-                    "action": "Negocie a dívida da C&A",
-                    "reason": "Lojas costumam oferecer descontos de 50–70% para quitação à vista.",
-                },
-                {
-                    "step": 3,
-                    "action": "Monte uma reserva de emergência",
-                    "reason": "Com R$ 3.530/mês livre, você pode poupar e evitar novos endividamentos.",
-                },
-            ],
-            "negotiation_tip": (
-                "Para o Nubank, ligue para o número no verso do cartão e peça o 'valor de quitação' — "
-                "bancos digitais costumam oferecer desconto de 30–40% para pagamento à vista."
-            ),
-        },
-    },
-
-    # Ana — em atenção (Persona 2)
+    # Ana — atenção (Persona 2)
     "987.654.321-00": {
         "monthly_income": 2800,
-        "situation": {
-            "level": "warning",
-            "label": "Atenção",
-            "color": "yellow",
-        },
+        "situation": {"level": "warning", "label": "Atenção", "color": "yellow"},
         "prioritized": [
             {
                 "id": 0,
@@ -274,6 +184,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Aluguel",
                 "total_amount": 4200,
                 "monthly_payment": 1400,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
@@ -283,6 +194,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Luz / Água",
                 "total_amount": 650,
                 "monthly_payment": 0,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
@@ -292,6 +204,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Empréstimo Bancário",
                 "total_amount": 12000,
                 "monthly_payment": 480,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
@@ -301,6 +214,7 @@ MOCK_DEBT_DATA = {
                 "type_label": "Cartão de Crédito",
                 "total_amount": 5600,
                 "monthly_payment": 300,
+                "due_date": None,
                 "is_prescribed": False,
             },
         ],
@@ -315,21 +229,9 @@ MOCK_DEBT_DATA = {
                 "O PROCON pode intermediar a negociação do aluguel sem necessidade de ação judicial."
             ),
             "action_plan": [
-                {
-                    "step": 1,
-                    "action": "Negocie o aluguel atrasado diretamente com o proprietário",
-                    "reason": "Risco de despejo. Proprietários preferem negociar a entrar com ação judicial.",
-                },
-                {
-                    "step": 2,
-                    "action": "Quite a conta de luz/água",
-                    "reason": "Valores pequenos com risco de corte imediato. Priorize antes das dívidas bancárias.",
-                },
-                {
-                    "step": 3,
-                    "action": "Renegocie o cartão Bradesco com desconto",
-                    "reason": "Juros de cartão são os mais altos. Ofereça 50% à vista para quitação.",
-                },
+                {"step": 1, "action": "Negocie o aluguel atrasado diretamente com o proprietário", "reason": "Risco de despejo. Proprietários preferem negociar a entrar com ação judicial."},
+                {"step": 2, "action": "Quite a conta de luz/água", "reason": "Valores pequenos com risco de corte imediato. Priorize antes das dívidas bancárias."},
+                {"step": 3, "action": "Renegocie o cartão Bradesco com desconto", "reason": "Juros de cartão são os mais altos. Ofereça 50% à vista para quitação."},
             ],
             "negotiation_tip": (
                 "Para o aluguel, proponha pagar 1 mês agora e parcelar os outros 2 em 3x. "
@@ -338,26 +240,61 @@ MOCK_DEBT_DATA = {
         },
     },
 
-    # Maria — dívida prescrita (Persona 4 — edge case de prescrição)
-    "000.000.002-00": {
-        "monthly_income": 3200,
-        "situation": {
-            "level": "safe",
-            "label": "Controlado",
-            "color": "green",
-        },
+    # Carlos — controlado (Persona 1)
+    "111.222.333-00": {
+        "monthly_income": 4000,
+        "situation": {"level": "safe", "label": "Controlado", "color": "green"},
         "prioritized": [
             {
                 "id": 0,
-                "creditor": "Cartão Inter",
+                "creditor": "Nubank",
                 "type": "cartao_credito",
                 "type_label": "Cartão de Crédito",
-                "total_amount": 6400,
-                "monthly_payment": 350,
+                "total_amount": 3200,
+                "monthly_payment": 200,
+                "due_date": None,
                 "is_prescribed": False,
             },
             {
                 "id": 1,
+                "creditor": "C&A",
+                "type": "loja_comercio",
+                "type_label": "Loja / Comércio",
+                "total_amount": 800,
+                "monthly_payment": 270,
+                "due_date": None,
+                "is_prescribed": False,
+            },
+        ],
+        "analysis": {
+            "summary": (
+                "Suas dívidas comprometem apenas 11,7% da sua renda — você está no controle. "
+                "Atenção ao rotativo do cartão Nubank: se não quitado, os juros dobram a dívida em menos de 1 ano."
+            ),
+            "legal_rights": (
+                "Mesmo com as dívidas sob controle, você tem direito à informação clara sobre juros e encargos. "
+                "Pela Lei 14.181/2021, qualquer cláusula abusiva de juros pode ser revisada. "
+                "Se o cartão praticar juros acima da média do mercado, você pode exigir revisão junto ao banco ou PROCON."
+            ),
+            "action_plan": [
+                {"step": 1, "action": "Quite o cartão Nubank o quanto antes", "reason": "O rotativo do cartão cobra em média 10%/mês — quitar agora evita que R$ 3.200 virem R$ 6.400 em 8 meses."},
+                {"step": 2, "action": "Termine de pagar a C&A em dia", "reason": "Com apenas 3 parcelas de R$ 270, vale manter o pagamento e fechar logo."},
+                {"step": 3, "action": "Monte uma reserva de emergência", "reason": "Com 88% da renda livre, você tem condição de guardar R$ 400–600/mês e evitar novas dívidas."},
+            ],
+            "negotiation_tip": (
+                "Ligue para o Nubank e ofereça quitar 80% do saldo à vista — "
+                "mesmo clientes sem atraso conseguem desconto ao solicitar quitação antecipada pelo app."
+            ),
+        },
+    },
+
+    # Maria — dívida prescrita (Persona 4)
+    "444.555.666-00": {
+        "monthly_income": 3200,
+        "situation": {"level": "safe", "label": "Controlado", "color": "green"},
+        "prioritized": [
+            {
+                "id": 0,
                 "creditor": "Magazine Luiza",
                 "type": "loja_comercio",
                 "type_label": "Loja / Comércio",
@@ -366,37 +303,35 @@ MOCK_DEBT_DATA = {
                 "due_date": "2018-05-01",
                 "is_prescribed": True,
             },
+            {
+                "id": 1,
+                "creditor": "Banco Inter",
+                "type": "cartao_credito",
+                "type_label": "Cartão de Crédito",
+                "total_amount": 6400,
+                "monthly_payment": 350,
+                "due_date": None,
+                "is_prescribed": False,
+            },
         ],
         "analysis": {
             "summary": (
-                "Suas dívidas comprometem 10,9% da sua renda mensal — situação controlada. "
-                "Atenção: a dívida da Magazine Luiza pode estar prescrita e não deve ser paga sem verificação."
+                "Suas dívidas comprometem 10,9% da renda — você está no controle. "
+                "Atenção: a dívida da Magazine Luiza pode estar prescrita. Não pague sem verificar antes."
             ),
             "legal_rights": (
-                "A dívida da Magazine Luiza venceu em 2018 — mais de 5 anos atrás. "
-                "Pela lei, dívidas prescritas não podem mais ser cobradas judicialmente. "
-                "Pagar ou reconhecer essa dívida pode reiniciar o prazo de prescrição: consulte o PROCON antes de qualquer decisão."
+                "A dívida da Magazine Luiza venceu em 2018 — já se passaram mais de 5 anos. "
+                "Dívidas prescritas não podem mais ser cobradas judicialmente pela Lei 10.406/2002. "
+                "Pagar ou reconhecer a dívida pode reiniciar o prazo prescricional. Consulte a Defensoria antes de qualquer acordo."
             ),
             "action_plan": [
-                {
-                    "step": 1,
-                    "action": "Verifique a prescrição da dívida da Magazine Luiza",
-                    "reason": "Se venceu em 2018, pode estar prescrita. Não pague sem confirmar com o PROCON ou Defensoria.",
-                },
-                {
-                    "step": 2,
-                    "action": "Negocie o cartão Inter",
-                    "reason": "Juros de cartão são altos. Ofereça quitação com 40% de desconto ou parcelamento com juros máximos de 12% ao ano.",
-                },
-                {
-                    "step": 3,
-                    "action": "Guarde comprovante de qualquer acordo",
-                    "reason": "Sempre peça o termo de quitação por escrito antes de efetuar o pagamento.",
-                },
+                {"step": 1, "action": "Verifique a prescrição da dívida Magazine Luiza", "reason": "Antes de pagar, confirme com a Defensoria Pública ou PROCON se a dívida está realmente prescrita."},
+                {"step": 2, "action": "Não reconheça a dívida prescrita por escrito ou verbalmente", "reason": "Qualquer reconhecimento pode reiniciar o prazo de 5 anos e tornar a dívida exigível novamente."},
+                {"step": 3, "action": "Continue pagando o cartão Inter normalmente", "reason": "Com R$ 350/mês, você quita em cerca de 22 meses. Evite atrasos para não cair no rotativo."},
             ],
             "negotiation_tip": (
-                "Antes de qualquer contato com a Magazine Luiza, verifique no PROCON se a cobrança ainda é legal. "
-                "Se prescrita, você pode informar isso à loja por escrito e solicitar a baixa da negativação."
+                "Se a Magazine Luiza insistir na cobrança após confirmada a prescrição, "
+                "registre uma reclamação formal no PROCON — a cobrança de dívida prescrita é prática abusiva e pode gerar indenização."
             ),
         },
     },

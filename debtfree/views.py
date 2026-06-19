@@ -1,6 +1,9 @@
 import json
+import os
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
+from django.http import HttpResponse
+from django.conf import settings
 
 from .rules import enrich, prioritize, classify_situation
 from .claude_service import analyze_debts, generate_letter
@@ -13,6 +16,13 @@ from .financial_service import (
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
+
+def service_worker(request):
+    sw_path = os.path.join(settings.BASE_DIR, 'debtfree', 'static', 'debtfree', 'sw.js')
+    with open(sw_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    return HttpResponse(content, content_type='application/javascript')
+
 
 def login_view(request):
     if request.session.get("user"):
@@ -112,6 +122,47 @@ def analyze(request):
 
 
 # ---------------------------------------------------------------------------
+# Renda
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def renda(request):
+    user = request.session["user"]
+    debt_data = _get_debt_data(request)
+    form_data = {"monthly_income": debt_data.get("monthly_income", "")}
+
+    if request.method == "POST":
+        try:
+            monthly_income = float(request.POST.get("monthly_income", 0))
+            if monthly_income <= 0:
+                raise ValueError("Renda deve ser maior que zero.")
+
+            income_source = request.POST.get("income_source", "")
+            other_income = float(request.POST.get("other_income") or 0)
+
+            # Atualiza na sessão
+            if request.session.get("debt_data"):
+                request.session["debt_data"]["monthly_income"] = monthly_income + other_income
+                request.session.modified = True
+
+            from django.contrib import messages
+            messages.success(request, "Renda atualizada com sucesso!")
+            return redirect("renda")
+
+        except ValueError as e:
+            from django.contrib import messages
+            messages.error(request, str(e))
+            form_data = {
+                "monthly_income": request.POST.get("monthly_income", ""),
+                "income_source":  request.POST.get("income_source", ""),
+                "other_income":   request.POST.get("other_income", ""),
+            }
+
+    return render(request, "debtfree/renda.html", {"user": user, "form_data": form_data})
+
+
+# ---------------------------------------------------------------------------
 # Tadeu — resultados e ação
 # ---------------------------------------------------------------------------
 
@@ -152,16 +203,13 @@ def dashboard(request):
     chart_labels = [d["creditor"] for d in prioritized]
     chart_values = [d["total_amount"] for d in prioritized]
 
-    has_prescribed = any(d.get("is_prescribed") for d in prioritized)
-
     return render(request, "debtfree/dashboard.html", {
         **debt_data,
-        "user":           user,
-        "market":         market,
-        "summary":        summary,
-        "chart_labels":   json.dumps(chart_labels),
-        "chart_values":   json.dumps(chart_values),
-        "has_prescribed": has_prescribed,
+        "user":          user,
+        "market":        market,
+        "summary":       summary,
+        "chart_labels":  json.dumps(chart_labels),
+        "chart_values":  json.dumps(chart_values),
     })
 
 
@@ -215,6 +263,16 @@ Telefone: {user['phone']}"""
         "letter":         mock_letter,
         "user":           user,
         "monthly_income": debt_data["monthly_income"],
+    })
+
+
+@login_required
+def perfil(request):
+    user = request.session["user"]
+    debt_data = _get_debt_data(request)
+    return render(request, "debtfree/perfil.html", {
+        "user": user,
+        "monthly_income": debt_data.get("monthly_income"),
     })
 
 
