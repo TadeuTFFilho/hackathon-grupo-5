@@ -35,9 +35,11 @@
 
 ---
 
-## Persona 4 — "Maria, a dívida prescrita" (edge case)
+## Persona 4 — "Maria, a dívida prescrita" 🟡 (edge case)
 - **Renda:** R$ 3.200/mês
 - **Dívidas:**
-  - Dívida loja Magazine Luiza de **2018**: R$ 2.300 (pode estar prescrita)
-  - Cartão inter: R$ 6.400 (parcela R$ 350/mês)
+  - Dívida loja Magazine Luiza de **2018** (dueDate `2018-05-01`): R$ 2.300 (pode estar prescrita)
+  - Cartão Inter: R$ 6.400 (parcela R$ 350/mês)
+- **Total mensal em dívidas:** R$ 350 → 10,9% da renda
+- **Situação:** Controlado — mas com dívida possivelmente prescrita
 - **Objetivo:** testar flag de prescrição (dívida > 5 anos)
