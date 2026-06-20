@@ -114,6 +114,12 @@ def analyze(request):
             "analysis":       None,  # Luis preenche aqui
         }
 
+        from django.contrib import messages
+        n = len(debts)
+        messages.success(
+            request,
+            f"{n} dívida{'s' if n > 1 else ''} adicionada{'s' if n > 1 else ''} com sucesso."
+        )
         return redirect("dashboard")
 
     except Exception as e:
