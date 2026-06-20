@@ -1,0 +1,107 @@
+{% extends "debtfree/base.html" %}
+{% load debtfree_filters %}
+{% block title %}QuitAI — {% if action == "add" %}Nova dívida{% else %}Editar dívida{% endif %}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto py-6">
+
+  {# Header #}
+  <div class="flex items-center gap-3 mb-6">
+    <a href="{% url 'dashboard' %}" class="w-9 h-9 rounded-full bg-warm-100 flex items-center justify-center shrink-0">
+      <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600"></i>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">
+        {% if action == "add" %}Adicionar dívida{% else %}Editar dívida{% endif %}
+      </h1>
+      <p class="text-xs text-gray-400 mt-0.5">Os dados ficam só nesta sessão — para demonstração</p>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="bg-red-50 border border-red-200 rounded-[12px] px-4 py-3 mb-4 flex items-center gap-2 text-sm text-red-700">
+    <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="POST" class="card space-y-5">
+    {% csrf_token %}
+
+    {# Credor #}
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Credor <span class="text-red-400">*</span></label>
+      <input type="text" name="creditor"
+             value="{{ form.creditor|default:'' }}"
+             placeholder="Ex: Nubank, CEF, Magazine Luiza…"
+             class="input" required>
+    </div>
+
+    {# Tipo #}
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Tipo de dívida <span class="text-red-400">*</span></label>
+      <select name="type" class="input">
+        {% for value, label in debt_types %}
+        <option value="{{ value }}"
+          {% if form.type == value %}selected{% endif %}>
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+      <p class="text-xs text-gray-400 mt-1">O tipo define a prioridade de pagamento</p>
+    </div>
+
+    {# Valor total #}
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Valor total da dívida (R$) <span class="text-red-400">*</span></label>
+      <input type="text" inputmode="decimal" name="total_amount"
+             value="{{ form.total_amount|default:'' }}"
+             placeholder="0,00"
+             class="input" required>
+    </div>
+
+    {# Parcela mensal #}
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Parcela mensal (R$)</label>
+      <input type="text" inputmode="decimal" name="monthly_payment"
+             value="{{ form.monthly_payment|default:'' }}"
+             placeholder="0,00 — deixe vazio se não tiver parcela"
+             class="input">
+    </div>
+
+    {# Data de vencimento (para verificar prescrição) #}
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Data do último vencimento</label>
+      <input type="date" name="due_date"
+             value="{{ form.due_date|default:'' }}"
+             class="input">
+      <p class="text-xs text-gray-400 mt-1">Opcional — usado para detectar dívidas prescritas (mais de 5 anos)</p>
+    </div>
+
+    {# Botões #}
+    <div class="flex gap-3 pt-2">
+      <a href="{% url 'dashboard' %}"
+         class="flex-1 text-center py-3 rounded-full border border-warm-200 text-gray-600 text-sm font-medium hover:bg-warm-50 transition-colors">
+        Cancelar
+      </a>
+      <button type="submit"
+              class="flex-1 py-3 rounded-full bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-colors">
+        {% if action == "add" %}Adicionar dívida{% else %}Salvar alterações{% endif %}
+      </button>
+    </div>
+  </form>
+
+  {% if action == "edit" %}
+  <form method="POST" action="{% url 'debt_delete' debt_index %}" class="mt-4">
+    {% csrf_token %}
+    <button type="submit"
+            onclick="return confirm('Remover esta dívida da lista?')"
+            class="w-full py-3 rounded-full border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+      <i data-lucide="trash-2" class="w-4 h-4"></i>
+      Remover dívida
+    </button>
+  </form>
+  {% endif %}
+
+</div>
+{% endblock %}

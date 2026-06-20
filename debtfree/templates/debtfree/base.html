@@ -170,9 +170,9 @@
                   {% if request.resolver_match.url_name == 'dashboard' %}text-teal-600 bg-teal-50{% else %}text-gray-500 hover:text-teal-600 hover:bg-teal-50{% endif %}">
           Início
         </a>
-        <a href="{% url 'onboarding' %}"
+        <a href="{% url 'debts_list' %}"
            class="px-3 py-2 rounded-lg font-medium transition-all duration-150
-                  {% if request.resolver_match.url_name == 'onboarding' %}text-teal-600 bg-teal-50{% else %}text-gray-500 hover:text-teal-600 hover:bg-teal-50{% endif %}">
+                  {% if request.resolver_match.url_name == 'debts_list' %}text-teal-600 bg-teal-50{% else %}text-gray-500 hover:text-teal-600 hover:bg-teal-50{% endif %}">
           Dívidas
         </a>
         <a href="{% url 'legal' %}"
@@ -219,12 +219,12 @@
       </a>
 
       {# Dívidas #}
-      <a href="{% url 'onboarding' %}"
+      <a href="{% url 'debts_list' %}"
          class="flex flex-col items-center justify-center gap-0.5 transition-all duration-150
-                {% if active == 'onboarding' or active == 'analyze' %}text-teal-600{% else %}text-warm-300 hover:text-gray-500{% endif %}">
+                {% if active == 'debts_list' %}text-teal-600{% else %}text-warm-300 hover:text-gray-500{% endif %}">
         <i data-lucide="credit-card" class="w-5 h-5"></i>
         <span class="text-[11px] font-medium">Dívidas</span>
-        {% if active == 'onboarding' or active == 'analyze' %}<span class="w-1.5 h-1.5 rounded-full bg-teal-500 mt-0.5"></span>{% endif %}
+        {% if active == 'debts_list' %}<span class="w-1.5 h-1.5 rounded-full bg-teal-500 mt-0.5"></span>{% endif %}
       </a>
 
       {# Perfil #}
@@ -241,8 +241,8 @@
   </nav>
   {% endif %}
 
-  {# ── Footer disclaimer — oculto no mobile ── #}
-  <footer class="hidden md:block border-t border-warm-100 bg-white py-4 px-6">
+  {# ── Footer disclaimer — visível em todos os tamanhos ── #}
+  <footer class="border-t border-warm-100 bg-white py-4 px-6">
     <p class="text-xs text-gray-400 text-center max-w-3xl mx-auto">
       Esta ferramenta oferece orientação informativa e não substitui apoio jurídico ou financeiro especializado.
       Para decisões importantes, consulte a <strong class="text-gray-500">Defensoria Pública</strong>,

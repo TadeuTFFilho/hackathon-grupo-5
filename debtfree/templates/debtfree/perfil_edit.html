@@ -1,0 +1,116 @@
+{% extends "debtfree/base.html" %}
+{% block title %}QuitAI — Editar perfil{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto py-6">
+
+  {# Header #}
+  <div class="flex items-center gap-3 mb-6">
+    <a href="{% url 'perfil' %}" class="w-9 h-9 rounded-full bg-warm-100 flex items-center justify-center shrink-0">
+      <i data-lucide="arrow-left" class="w-4 h-4 text-gray-600"></i>
+    </a>
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Editar dados</h1>
+      <p class="text-xs text-gray-400 mt-0.5">Mantenha suas informações atualizadas</p>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-[14px] px-4 py-3 mb-5 text-sm">
+    <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="POST" class="space-y-5">
+    {% csrf_token %}
+
+    {# Dados pessoais #}
+    <div class="card space-y-4">
+      <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-widest border-b border-warm-100 pb-3">Dados pessoais</h3>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Nome completo</label>
+        <input type="text" name="name" value="{{ form.name|default:user.name }}"
+               placeholder="João da Silva" class="input">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
+        <input type="email" name="email" value="{{ form.email|default:user.email }}"
+               placeholder="joao@email.com" class="input">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Telefone</label>
+        <input type="tel" name="phone" value="{{ form.phone|default:user.phone }}"
+               placeholder="(11) 99999-9999" class="input">
+      </div>
+    </div>
+
+    {# Endereço #}
+    <div class="card space-y-4">
+      <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-widest border-b border-warm-100 pb-3">
+        Endereço
+        <span class="text-xs font-normal text-teal-600 normal-case tracking-normal ml-2">— usado para localizar PROCON e Defensoria</span>
+      </h3>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Estado <span class="text-red-400">*</span></label>
+          <select name="state" required class="input">
+            <option value="">UF</option>
+            {% for uf, nome in states %}
+            <option value="{{ uf }}"
+              {% if form.state == uf %}selected
+              {% elif not form.state and user.address.state == uf %}selected{% endif %}>
+              {{ uf }} — {{ nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1.5">Cidade <span class="text-red-400">*</span></label>
+          <input type="text" name="city"
+                 value="{{ form.city|default:user.address.city }}"
+                 placeholder="São Paulo" required class="input">
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Bairro</label>
+        <input type="text" name="neighborhood"
+               value="{{ form.neighborhood|default:user.address.neighborhood }}"
+               placeholder="Centro" class="input">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Rua / Endereço</label>
+        <input type="text" name="street"
+               value="{{ form.street|default:user.address.street }}"
+               placeholder="Rua das Flores, 123" class="input">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">CEP</label>
+        <input type="text" name="zip_code" inputmode="numeric"
+               value="{{ form.zip_code|default:user.address.zip }}"
+               placeholder="00000-000" class="input sm:w-40">
+      </div>
+    </div>
+
+    {# Botões #}
+    <div class="flex gap-3">
+      <a href="{% url 'perfil' %}"
+         class="flex-1 text-center py-3 rounded-full border border-warm-200 text-gray-600 text-sm font-medium hover:bg-warm-50 transition-colors">
+        Cancelar
+      </a>
+      <button type="submit"
+              class="flex-1 py-3 rounded-full bg-teal-600 text-white text-sm font-semibold hover:bg-teal-700 transition-colors">
+        Salvar alterações
+      </button>
+    </div>
+
+  </form>
+</div>
+{% endblock %}

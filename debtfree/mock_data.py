@@ -172,10 +172,10 @@ MOCK_DEBT_DATA = {
         },
     },
 
-    # Ana — atenção (Persona 2)
+    # Ana — superendividada (Persona 2) — 77,8% da renda comprometida
     "987.654.321-00": {
         "monthly_income": 2800,
-        "situation": {"level": "warning", "label": "Atenção", "color": "yellow"},
+        "situation": {"level": "critical", "label": "Superendividado", "color": "red"},
         "prioritized": [
             {
                 "id": 0,
@@ -220,12 +220,12 @@ MOCK_DEBT_DATA = {
         ],
         "analysis": {
             "summary": (
-                "Suas dívidas comprometem 51% da sua renda mensal — você está em zona de atenção. "
+                "Suas dívidas comprometem cerca de 78% da sua renda mensal — você está em situação de superendividamento. "
                 "O aluguel atrasado é o risco mais imediato e precisa ser resolvido primeiro."
             ),
             "legal_rights": (
-                "Com 51% da renda comprometida, você está próxima do limite de superendividamento. "
-                "A Lei 14.181/2021 já pode ser aplicada preventivamente para renegociar condições. "
+                "Com 78% da renda comprometida, você está em situação de superendividamento pela Lei 14.181/2021. "
+                "Você pode solicitar a repactuação de todas as dívidas em juízo com redução de juros e prazo estendido. "
                 "O PROCON pode intermediar a negociação do aluguel sem necessidade de ação judicial."
             ),
             "action_plan": [

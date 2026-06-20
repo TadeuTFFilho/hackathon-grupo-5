@@ -4,7 +4,12 @@ Todas as chamadas têm fallback para valores hardcoded caso a API esteja fora do
 """
 import urllib.request
 import json
+import time
 from datetime import date, timedelta
+
+# Cache simples em memória — evita 9s de latência no load do dashboard
+_RATES_CACHE = {"data": None, "ts": 0}
+_CACHE_TTL   = 900  # 15 minutos
 
 # Séries do BCB (SGS)
 BCB_SERIES = {
@@ -15,11 +20,12 @@ BCB_SERIES = {
 }
 
 # Fallback caso a API esteja indisponível
+# Valores de referência BCB — jun/2025
 FALLBACK_RATES = {
-    "selic_meta":            14.25,
-    "juros_cartao":          33.84,
-    "juros_emprestimo":      13.08,
-    "juros_cheque_especial": 7.93,
+    "selic_meta":            14.75,   # SELIC meta % a.a.
+    "juros_cartao":          15.10,   # Cartão rotativo total % a.m. (BCB 20714)
+    "juros_emprestimo":       6.24,   # Empréstimo pessoal % a.m. (BCB 20754)
+    "juros_cheque_especial":  7.93,   # Cheque especial % a.m.
 }
 
 # Taxas de juros típicas por tipo de dívida (ao mês)
@@ -37,35 +43,44 @@ DEFAULT_RATES_BY_TYPE = {
 }
 
 
-def _fetch_bcb(series_id: int, fallback: float) -> float:
-    """Busca o valor mais recente de uma série do BCB."""
+def _fetch_bcb(series_id: int, fallback: float) -> tuple[float, bool]:
+    """Busca o valor mais recente de uma série do BCB. Retorna (valor, is_live)."""
     try:
         url = f"https://api.bcb.gov.br/dados/serie/bcdata.sgs.{series_id}/dados/ultimos/1?formato=json"
         with urllib.request.urlopen(url, timeout=3) as resp:
             data = json.loads(resp.read())
-            return float(data[0]["valor"])
+            return float(data[0]["valor"]), True
     except Exception:
-        return fallback
+        return fallback, False
 
 
 def get_market_rates() -> dict:
     """
     Retorna taxas de mercado atualizadas do BCB.
-    Cache simples: reutilizar dentro da mesma request é suficiente para hackathon.
-    TODO (prod): adicionar cache com Redis ou django.core.cache.
+    Cache de 15 minutos em memória para evitar latência na demo.
+    Inclui flag `rates_live` para indicar se vieram do BCB ou do fallback.
     """
-    selic_anual   = _fetch_bcb(BCB_SERIES["selic_meta"],       FALLBACK_RATES["selic_meta"])
-    juros_cartao  = _fetch_bcb(BCB_SERIES["juros_cartao"],     FALLBACK_RATES["juros_cartao"])
-    juros_empr    = _fetch_bcb(BCB_SERIES["juros_emprestimo"], FALLBACK_RATES["juros_emprestimo"])
+    global _RATES_CACHE
+    now = time.time()
+    if _RATES_CACHE["data"] and (now - _RATES_CACHE["ts"]) < _CACHE_TTL:
+        return _RATES_CACHE["data"]
+
+    selic_anual,  selic_live  = _fetch_bcb(BCB_SERIES["selic_meta"],       FALLBACK_RATES["selic_meta"])
+    juros_cartao, cartao_live = _fetch_bcb(BCB_SERIES["juros_cartao"],     FALLBACK_RATES["juros_cartao"])
+    juros_empr,   empr_live   = _fetch_bcb(BCB_SERIES["juros_emprestimo"], FALLBACK_RATES["juros_emprestimo"])
 
     selic_mensal = round(((1 + selic_anual / 100) ** (1 / 12) - 1) * 100, 4)
+    rates_live   = selic_live and cartao_live and empr_live
 
-    return {
-        "selic_anual":           selic_anual,
-        "selic_mensal":          selic_mensal,
-        "juros_cartao_mensal":   juros_cartao,
+    result = {
+        "selic_anual":             selic_anual,
+        "selic_mensal":            selic_mensal,
+        "juros_cartao_mensal":     juros_cartao,
         "juros_emprestimo_mensal": juros_empr,
+        "rates_live":              rates_live,
     }
+    _RATES_CACHE = {"data": result, "ts": now}
+    return result
 
 
 # ---------------------------------------------------------------------------

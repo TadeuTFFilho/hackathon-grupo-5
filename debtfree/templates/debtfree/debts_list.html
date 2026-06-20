@@ -1,0 +1,139 @@
+{% extends "debtfree/base.html" %}
+{% load debtfree_filters %}
+{% block title %}QuitAI — Minhas Dívidas{% endblock %}
+
+{% block content %}
+
+{# Cabeçalho #}
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Gerenciar</p>
+    <h2 class="text-2xl font-bold text-gray-900">Minhas dívidas</h2>
+    <p class="text-gray-500 text-sm mt-1">{{ prioritized|length }} dívida{{ prioritized|length|pluralize:"s" }} cadastrada{{ prioritized|length|pluralize:"s" }}</p>
+  </div>
+  <a href="{% url 'debt_add' %}"
+     class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-full transition-colors">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    Adicionar
+  </a>
+</div>
+
+{% if not prioritized %}
+{# Estado vazio #}
+<div class="card text-center py-12">
+  <div class="w-14 h-14 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+    <i data-lucide="credit-card" class="w-7 h-7 text-warm-300"></i>
+  </div>
+  <h3 class="font-semibold text-gray-800 mb-2">Nenhuma dívida cadastrada</h3>
+  <p class="text-sm text-gray-500 mb-6">Adicione suas dívidas para visualizar o plano de pagamento.</p>
+  <a href="{% url 'debt_add' %}" class="btn-primary inline-flex">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    Adicionar primeira dívida
+  </a>
+</div>
+
+{% else %}
+
+{# Resumo rápido #}
+<div class="grid grid-cols-2 gap-3 mb-5">
+  <div class="card text-center">
+    <p class="text-xs text-gray-400 mb-1">Total em dívidas</p>
+    <p class="text-lg font-bold tabular text-gray-900">{{ summary.total_debt|brl }}</p>
+  </div>
+  <div class="card text-center">
+    <p class="text-xs text-gray-400 mb-1">Parcelas/mês</p>
+    <p class="text-lg font-bold tabular text-red-600">{{ summary.total_monthly|brl }}</p>
+  </div>
+</div>
+
+{# Lista de dívidas #}
+<div class="space-y-3 mb-24">
+  {% for debt in prioritized %}
+  <div class="card border {% if debt.debt_status == 'paga' %}border-emerald-100 bg-emerald-50/30{% elif forloop.first %}border-red-100{% else %}border-warm-100{% endif %}">
+
+    {# Linha 1: rank + credor + valor #}
+    <div class="flex items-start gap-3">
+      <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center shrink-0 mt-0.5
+        {% if forloop.first %}bg-red-100 text-red-700
+        {% elif debt.debt_status == 'paga' %}bg-emerald-100 text-emerald-700
+        {% else %}bg-warm-100 text-gray-600{% endif %}">
+        {{ forloop.counter }}
+      </span>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="font-semibold text-gray-900 truncate">{{ debt.creditor }}</span>
+          <span class="tabular font-bold text-sm shrink-0
+            {% if debt.debt_status == 'paga' %}text-gray-400 line-through{% else %}text-gray-900{% endif %}">
+            {{ debt.total_amount|brl }}
+          </span>
+        </div>
+
+        {# Tipo + parcela #}
+        <div class="flex items-center justify-between mt-0.5">
+          <span class="text-xs text-gray-500">{{ debt.type_label }}</span>
+          {% if debt.monthly_payment %}
+          <span class="text-xs text-gray-400 tabular">{{ debt.monthly_payment|brl }}/mês</span>
+          {% endif %}
+        </div>
+
+        {# Badges de status #}
+        <div class="flex flex-wrap gap-1.5 mt-2">
+          {% if debt.debt_status == 'paga' %}
+            <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3 h-3"></i>Paga
+            </span>
+          {% elif debt.debt_status == 'em_negociacao' %}
+            <span class="text-xs bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="handshake" class="w-3 h-3"></i>Em negociação
+            </span>
+          {% elif forloop.first %}
+            <span class="text-xs bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="alert-circle" class="w-3 h-3"></i>Prioridade máxima
+            </span>
+          {% endif %}
+          {% if debt.is_prescribed %}
+            <span class="text-xs bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3"></i>Pode estar prescrita
+            </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Linha de ações #}
+    <div class="flex items-center gap-2 mt-3 pt-3 border-t border-warm-100">
+      <a href="{% url 'debt_edit' debt.id %}"
+         class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] bg-teal-50 hover:bg-teal-100 text-teal-700 text-sm font-medium transition-colors">
+        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+        Editar
+      </a>
+      {% if debt.debt_status != 'paga' %}
+      <a href="/dashboard/letter/{{ debt.id }}/"
+         class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] bg-warm-50 hover:bg-warm-100 text-gray-600 text-sm font-medium transition-colors">
+        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+        Gerar carta
+      </a>
+      {% endif %}
+      <form method="POST" action="/dashboard/mark/{{ debt.id }}/" class="shrink-0">
+        {% csrf_token %}
+        {% if debt.debt_status == 'paga' %}
+          <button name="status" value=""
+                  class="py-2 px-3 rounded-[10px] bg-warm-50 hover:bg-warm-100 text-gray-500 text-sm transition-colors">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+          </button>
+        {% else %}
+          <button name="status" value="paga"
+                  class="py-2 px-3 rounded-[10px] bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-sm transition-colors"
+                  title="Marcar como paga">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+          </button>
+        {% endif %}
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
