@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.conf import settings
 
 from .rules import enrich, prioritize, classify_situation, calculate_score
-from .claude_service import analyze_debts, generate_letter
+from .openai_service import analyze_debts, generate_letter
 from .mock_data import MOCK_USERS, MOCK_DEBT_DATA, get_user_by_cpf
 from .auth import login_required
 from .auth_utils import hash_password, check_password as check_pw
@@ -186,11 +186,17 @@ def analyze(request):
         for i, d in enumerate(prioritized):
             d["id"] = i
 
+        # Análise de IA — tenta chamar OpenAI, fallback silencioso
+        try:
+            analysis = analyze_debts(monthly_income, prioritized, situation)
+        except Exception:
+            analysis = None
+
         request.session["debt_data"] = {
             "monthly_income": monthly_income,
             "situation":      situation,
             "prioritized":    prioritized,
-            "analysis":       None,  # Luis preenche aqui
+            "analysis":       analysis,
         }
 
         return redirect("dashboard")
@@ -355,26 +361,30 @@ def letter(request, debt_index):
         return redirect("dashboard")
 
     address = user.get("address", {})
-    address_str = (
-        f"{address.get('street', '')}, {address.get('neighborhood', '')} — "
-        f"{address.get('city', '')}/{address.get('state', '')} — CEP {address.get('zip', '')}"
-    )
 
-    # TODO (Luis): substituir pelo texto gerado pela IA
-    mock_letter = f"""{address.get('city', 'São Paulo')}, {_today_br()}
+    # Gera corpo da carta via IA
+    try:
+        ai_body = generate_letter(
+            debt          = debt,
+            monthly_income= debt_data["monthly_income"],
+            user_name     = user["name"],
+        )
+    except Exception:
+        ai_body = (
+            f"Eu, {user['name']}, CPF {user['cpf']}, venho por meio desta carta manifestar "
+            f"meu interesse em regularizar a dívida com {debt['creditor']}, no valor de "
+            f"R$ {debt['total_amount']:.2f}, e solicito proposta de renegociação nos termos "
+            f"da Lei 14.181/2021."
+        )
+
+    letter_text = f"""{address.get('city', 'São Paulo')}, {_today_br()}
 
 {debt['creditor']}
 A/C Departamento de Cobranças
 
 Assunto: Proposta de Renegociação de Dívida
 
-Prezados Senhores,
-
-Eu, {user['name']}, CPF {user['cpf']}, residente à {address_str}, venho por meio desta carta manifestar meu interesse em regularizar a dívida referente ao contrato com {debt['creditor']}, no valor de R$ {debt['total_amount']:.2f}.
-
-Em razão das dificuldades financeiras que enfrento atualmente, com renda mensal de R$ {debt_data['monthly_income']:.2f}, e amparado(a) pela Lei 14.181/2021 (Lei do Superendividamento), solicito a análise da seguinte proposta: quitação com desconto de 50% sobre o valor total (R$ {debt['total_amount'] * 0.5:.2f}), ou alternativamente o parcelamento do saldo devedor em até 24 vezes com juros máximos de 12% ao ano.
-
-Estou disponível para negociação pelo telefone {user['phone']} ou e-mail {user['email']}. Aguardo retorno para formalização do acordo.
+{ai_body}
 
 Atenciosamente,
 {user['name']}
@@ -383,7 +393,7 @@ Telefone: {user['phone']}"""
 
     return render(request, "debtfree/letter.html", {
         "debt":           debt,
-        "letter":         mock_letter,
+        "letter":         letter_text,
         "user":           user,
         "monthly_income": debt_data["monthly_income"],
     })
@@ -426,25 +436,30 @@ def letter_pdf(request, debt_index):
         return redirect("dashboard")
 
     address = user.get("address", {})
-    address_str = (
-        f"{address.get('street', '')}, {address.get('neighborhood', '')} — "
-        f"{address.get('city', '')}/{address.get('state', '')} — CEP {address.get('zip', '')}"
-    )
 
-    mock_letter = f"""{address.get('city', 'São Paulo')}, {_today_br()}
+    # Gera corpo da carta via IA
+    try:
+        ai_body = generate_letter(
+            debt          = debt,
+            monthly_income= debt_data["monthly_income"],
+            user_name     = user["name"],
+        )
+    except Exception:
+        ai_body = (
+            f"Eu, {user['name']}, CPF {user['cpf']}, venho por meio desta carta manifestar "
+            f"meu interesse em regularizar a dívida com {debt['creditor']}, no valor de "
+            f"R$ {debt['total_amount']:.2f}, e solicito proposta de renegociação nos termos "
+            f"da Lei 14.181/2021."
+        )
+
+    letter_text = f"""{address.get('city', 'São Paulo')}, {_today_br()}
 
 {debt['creditor']}
 A/C Departamento de Cobranças
 
 Assunto: Proposta de Renegociação de Dívida
 
-Prezados Senhores,
-
-Eu, {user['name']}, CPF {user['cpf']}, residente à {address_str}, venho por meio desta carta manifestar meu interesse em regularizar a dívida referente ao contrato com {debt['creditor']}, no valor de R$ {debt['total_amount']:.2f}.
-
-Em razão das dificuldades financeiras que enfrento atualmente, com renda mensal de R$ {debt_data['monthly_income']:.2f}, e amparado(a) pela Lei 14.181/2021 (Lei do Superendividamento), solicito a análise da seguinte proposta: quitação com desconto de 50% sobre o valor total (R$ {debt['total_amount'] * 0.5:.2f}), ou alternativamente o parcelamento do saldo devedor em até 24 vezes com juros máximos de 12% ao ano.
-
-Estou disponível para negociação pelo telefone {user['phone']} ou e-mail {user['email']}. Aguardo retorno para formalização do acordo.
+{ai_body}
 
 Atenciosamente,
 {user['name']}
@@ -466,11 +481,11 @@ Telefone: {user['phone']}"""
 </head>
 <body>
 <div class="header">
-    <h1>Carta de Negociação — Conta Limpa</h1>
+    <h1>Carta de Negociação — QuitAI</h1>
     <p>Gerada com base na Lei 14.181/2021 · Caráter informativo, não constitui aconselhamento jurídico</p>
 </div>
-<div class="letter">{mock_letter}</div>
-<div class="footer">Gerado pelo Conta Limpa · Para situações complexas, consulte a Defensoria Pública ou o PROCON.</div>
+<div class="letter">{letter_text}</div>
+<div class="footer">Gerado pelo QuitAI · Para situações complexas, consulte a Defensoria Pública ou o PROCON.</div>
 </body>
 </html>"""
 
