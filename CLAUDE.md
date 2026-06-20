@@ -110,6 +110,18 @@ Definidas em `docs/business-rules.md` e implementadas em `rules.py`:
 - `financial_service.get_market_rates()` — sem cache; em produção, adicionar `django.core.cache`
 - **Pendente visual:** paleta atual usa Tailwind blue-600; direção de marca é teal `#2C8377` — migrar quando houver tempo
 
+## Auditoria de responsividade (feat/dashboard-interativo)
+
+Checklist mobile concluído — todos os templates são mobile-first com viewport-fit=cover:
+
+- ✅ `{% load debtfree_filters %}` adicionado em `dashboard.html`, `legal.html`, `letter.html`, `perfil.html` — filtro `|brl` agora funciona em todos os templates
+- ✅ CPFs corrigidos em `login.html`: Carlos `000.000.001-00`, Maria `000.000.002-00`
+- ✅ Labels dos `grid-cols-3` encurtados para caber em 320px: "Comprometida", "Cartão", "Empréstimo" (dashboard, seções de sumário e BCB)
+- ✅ Tab bar: `grid-cols-3`, `pb-safe`, `env(safe-area-inset-bottom)` — sem problema
+- ✅ Nav principal: `hidden` em mobile, só aparece em `md:flex`
+- ✅ Viewport: `<meta name="viewport" content="... viewport-fit=cover">` em `base.html`
+- ✅ `grid-cols-2 sm:grid-cols-3` já usado em cards de ação do dashboard (linha ~425)
+
 ## design/ — Copy e Personas
 
 - `design/copy/ui-copy.md` — microcopy oficial de toda a UI. Tom: empático, simples e encorajador. Usar esses textos nos templates — não inventar copy alternativo.

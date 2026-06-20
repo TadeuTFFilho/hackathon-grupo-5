@@ -1,4 +1,5 @@
 {% extends "debtfree/base.html" %}
+{% load debtfree_filters %}
 {% block title %}QuitAI — Início{% endblock %}
 
 {% block content %}
@@ -101,10 +102,10 @@
 <div class="card-teal mb-5">
   <p class="text-teal-200 text-xs font-semibold uppercase tracking-widest mb-1">Valor total em dívidas</p>
   <p class="text-4xl font-extrabold tabular mb-4">{{ summary.total_debt|brl }}</p>
-  <div class="grid grid-cols-3 gap-4 text-center">
+  <div class="grid grid-cols-3 gap-2 text-center">
     <div>
-      <p class="text-teal-300 text-xs mb-1">Renda comprometida</p>
-      <p class="text-xl font-bold tabular
+      <p class="text-teal-300 text-xs mb-1">Comprometida</p>
+      <p class="text-base font-bold tabular
         {% if summary.income_ratio > 50 %}text-red-300
         {% elif summary.income_ratio > 30 %}text-amber-300
         {% else %}text-emerald-300{% endif %}">
@@ -112,12 +113,12 @@
       </p>
     </div>
     <div>
-      <p class="text-teal-300 text-xs mb-1">Juros por mês</p>
-      <p class="text-xl font-bold tabular text-amber-300">{{ summary.monthly_interest|brl }}</p>
+      <p class="text-teal-300 text-xs mb-1">Juros/mês</p>
+      <p class="text-base font-bold tabular text-amber-300">{{ summary.monthly_interest|brl }}</p>
     </div>
     <div>
-      <p class="text-teal-300 text-xs mb-1">Sobra por mês</p>
-      <p class="text-xl font-bold tabular
+      <p class="text-teal-300 text-xs mb-1">Sobra/mês</p>
+      <p class="text-base font-bold tabular
         {% if summary.free_income < 0 %}text-red-300{% else %}text-white{% endif %}">
         {{ summary.free_income|brl }}
       </p>
@@ -192,7 +193,7 @@
       <span class="text-sm text-gray-500">R$</span>
       <input type="number" id="sim-value"
              min="0" max="{{ summary.total_debt|floatformat:0 }}" value="0" step="10"
-             class="w-32 border border-warm-200 rounded-[10px] px-3 py-2 text-sm tabular text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-400">
+             class="w-full sm:w-32 border border-warm-200 rounded-[10px] px-3 py-2 text-sm tabular text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-400">
     </div>
   </div>
 
@@ -224,14 +225,29 @@
 
       <div class="debt-rank">{{ forloop.counter }}</div>
 
-      <div class="debt-info flex-1">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="debt-creditor">{{ debt.creditor }}</span>
+      <div class="flex-1 min-w-0">
+        {# Linha 1: credor + valor total #}
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="debt-creditor truncate">{{ debt.creditor }}</span>
+          <span class="debt-amount tabular shrink-0
+            {% if debt.debt_status == 'paga' %}line-through text-gray-400{% endif %}">
+            {{ debt.total_amount|brl }}
+          </span>
+        </div>
+
+        {# Linha 2: tipo + parcela mensal #}
+        <div class="flex items-center justify-between mt-0.5">
+          <span class="debt-type">{{ debt.type_label }}</span>
+          {% if debt.monthly_payment %}
+          <span class="text-xs text-gray-400 tabular shrink-0">{{ debt.monthly_payment|brl }}/mês</span>
+          {% endif %}
+        </div>
+
+        {# Badges #}
+        <div class="flex flex-wrap gap-1.5 mt-2">
           {% if forloop.first %}
             <span class="badge-priority">Pague esta primeiro</span>
           {% endif %}
-          <span class="debt-type">{{ debt.type_label }}</span>
-          {# Badges de risco por tipo — sempre com ícone + label #}
           {% if debt.type == 'pensao_alimenticia' %}
             <span class="text-xs bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
               <i data-lucide="alert-circle" class="w-3 h-3"></i>Risco de prisão
@@ -251,13 +267,12 @@
           {% endif %}
           {% if debt.is_prescribed %}
             <span class="badge-prescribed inline-flex items-center gap-1">
-              <i data-lucide="clock" class="w-3 h-3"></i>Pode estar prescrita — verifique antes de pagar
+              <i data-lucide="clock" class="w-3 h-3"></i>Pode estar prescrita
             </span>
           {% endif %}
           {% if debt.prescription.urgent %}
             <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-              <i data-lucide="clock" class="w-3 h-3"></i>
-              Prescreve em {{ debt.prescription.days_left }} dias
+              <i data-lucide="clock" class="w-3 h-3"></i>Prescreve em {{ debt.prescription.days_left }} dias
             </span>
           {% endif %}
         </div>
@@ -275,38 +290,30 @@
           {% endif %}
         </div>
         {% endif %}
-      </div>
 
-      <div class="debt-actions text-right shrink-0">
-        <div class="debt-amount tabular
-          {% if debt.debt_status == 'paga' %}line-through text-gray-400{% endif %}">
-          {{ debt.total_amount|brl }}
-        </div>
-        {% if debt.monthly_payment %}
-        <div class="text-xs text-gray-400 tabular">{{ debt.monthly_payment|brl }}/mês</div>
-        {% endif %}
-        {% if debt.debt_status != 'paga' %}
-        <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost text-xs mt-1 block">
-          Gerar carta
-        </a>
-        {% endif %}
-        <form method="POST" action="/dashboard/mark/{{ debt.id }}/" class="mt-1 text-right">
-          {% csrf_token %}
-          {% if debt.debt_status == "paga" %}
-            <span class="text-xs text-emerald-600 font-medium">&#10003; Paga</span>
-            <button name="status" value="" class="text-xs text-gray-400 hover:text-gray-600 ml-2">&#8617; Desfazer</button>
-          {% elif debt.debt_status == "em_negociacao" %}
-            <span class="text-xs text-blue-600 font-medium">Em negociação</span>
-            <div class="flex gap-2 justify-end mt-0.5">
-              <button name="status" value="paga" class="text-xs text-emerald-600 hover:underline">Marcar como paga</button>
-              <button name="status" value="" class="text-xs text-gray-400">Cancelar</button>
-            </div>
-          {% else %}
-            <button name="status" value="em_negociacao" class="text-xs text-blue-500 hover:underline mt-0.5">
-              Em negociação
-            </button>
+        {# Ações #}
+        <div class="flex items-center gap-3 mt-2 flex-wrap">
+          {% if debt.debt_status != 'paga' %}
+          <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost text-xs">
+            <i data-lucide="file-text" class="w-3 h-3 inline-block mr-0.5"></i>Gerar carta
+          </a>
           {% endif %}
-        </form>
+          <form method="POST" action="/dashboard/mark/{{ debt.id }}/" class="inline-flex items-center gap-2">
+            {% csrf_token %}
+            {% if debt.debt_status == "paga" %}
+              <span class="text-xs text-emerald-600 font-medium">&#10003; Paga</span>
+              <button name="status" value="" class="text-xs text-gray-400 hover:text-gray-600">&#8617; Desfazer</button>
+            {% elif debt.debt_status == "em_negociacao" %}
+              <span class="text-xs text-blue-600 font-medium">Em negociação</span>
+              <button name="status" value="paga" class="text-xs text-emerald-600 hover:underline">Marcar paga</button>
+              <button name="status" value="" class="text-xs text-gray-400">Cancelar</button>
+            {% else %}
+              <button name="status" value="em_negociacao" class="text-xs text-blue-500 hover:underline">
+                Em negociação
+              </button>
+            {% endif %}
+          </form>
+        </div>
       </div>
 
     </div>
@@ -338,18 +345,18 @@
     <i data-lucide="activity" class="w-4 h-4 text-teal-600"></i>
     <h3 class="section-title text-teal-800">Taxas de mercado — Banco Central</h3>
   </div>
-  <div class="grid grid-cols-3 gap-4 text-center text-sm">
+  <div class="grid grid-cols-3 gap-2 text-center text-sm">
     <div>
       <p class="text-gray-500 text-xs mb-1">SELIC</p>
-      <p class="text-xl font-bold tabular text-teal-700">{{ market.selic_anual }}%<span class="text-xs font-normal">/ano</span></p>
+      <p class="text-base font-bold tabular text-teal-700">{{ market.selic_anual }}%<span class="text-xs font-normal">/ano</span></p>
     </div>
     <div>
-      <p class="text-gray-500 text-xs mb-1">Cartão (média)</p>
-      <p class="text-xl font-bold tabular text-red-600">{{ market.juros_cartao_mensal }}%<span class="text-xs font-normal">/mês</span></p>
+      <p class="text-gray-500 text-xs mb-1">Cartão</p>
+      <p class="text-base font-bold tabular text-red-600">{{ market.juros_cartao_mensal }}%<span class="text-xs font-normal">/mês</span></p>
     </div>
     <div>
-      <p class="text-gray-500 text-xs mb-1">Empréstimo (média)</p>
-      <p class="text-xl font-bold tabular text-amber-600">{{ market.juros_emprestimo_mensal }}%<span class="text-xs font-normal">/mês</span></p>
+      <p class="text-gray-500 text-xs mb-1">Empréstimo</p>
+      <p class="text-base font-bold tabular text-amber-600">{{ market.juros_emprestimo_mensal }}%<span class="text-xs font-normal">/mês</span></p>
     </div>
   </div>
   <p class="text-xs text-teal-500 mt-3 text-center">Fonte: Banco Central do Brasil — atualizado em tempo real</p>
