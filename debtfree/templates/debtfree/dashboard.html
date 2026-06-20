@@ -1,4 +1,5 @@
 {% extends "debtfree/base.html" %}
+{% load debtfree_filters %}
 {% block title %}QuitAI — Início{% endblock %}
 
 {% block content %}
@@ -38,14 +39,73 @@
   </div>
 </div>
 
+{# ── Score de saúde financeira ── #}
+<div class="mb-5 flex flex-col sm:flex-row gap-4">
+  {# Círculo do score #}
+  <div class="flex items-center gap-5 card flex-1">
+    <div class="relative w-20 h-20 shrink-0">
+      <svg class="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="34" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+        <circle cx="40" cy="40" r="34" fill="none"
+          stroke="{% if score.color == 'green' %}#10b981{% elif score.color == 'blue' %}#3b82f6{% elif score.color == 'yellow' %}#f59e0b{% elif score.color == 'orange' %}#f97316{% else %}#ef4444{% endif %}"
+          stroke-width="8"
+          stroke-dasharray="{{ score.score|floatformat:0 }} 100"
+          stroke-dashoffset="0"
+          stroke-linecap="round"
+          pathLength="100"/>
+      </svg>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span class="text-xl font-extrabold tabular
+          {% if score.color == 'green' %}text-emerald-600
+          {% elif score.color == 'blue' %}text-blue-600
+          {% elif score.color == 'yellow' %}text-amber-600
+          {% elif score.color == 'orange' %}text-orange-500
+          {% else %}text-red-600{% endif %}">
+          {{ score.score }}
+        </span>
+      </div>
+    </div>
+    <div>
+      <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-0.5">Score de saúde financeira</p>
+      <p class="text-xl font-bold
+        {% if score.color == 'green' %}text-emerald-600
+        {% elif score.color == 'blue' %}text-blue-600
+        {% elif score.color == 'yellow' %}text-amber-600
+        {% elif score.color == 'orange' %}text-orange-500
+        {% else %}text-red-600{% endif %}">
+        {{ score.label }}
+      </p>
+      <p class="text-xs text-gray-400 mt-1">Seu score melhora a cada dívida quitada.</p>
+    </div>
+  </div>
+
+  {# Progresso de dívidas #}
+  <div class="card flex-1">
+    <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-2">Progresso</p>
+    <div class="flex items-center gap-2 mb-2">
+      <div class="flex-1 h-3 bg-warm-100 rounded-full overflow-hidden">
+        <div class="h-full bg-emerald-500 rounded-full transition-all duration-500"
+             style="width: {{ progress_pct }}%"></div>
+      </div>
+      <span class="text-xs font-semibold text-gray-600 whitespace-nowrap tabular">{{ progress_pct }}%</span>
+    </div>
+    <p class="text-sm text-gray-700">
+      <strong>{{ paid_debts }}</strong> de <strong>{{ total_debts }}</strong> dívida{{ total_debts|pluralize }} resolvida{{ total_debts|pluralize }}
+      {% if in_negotiation > 0 %}
+        · <span class="text-blue-600 font-medium">{{ in_negotiation }} em negociação</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+
 {# ── Bloco total — superfície rica teal-700 ── #}
 <div class="card-teal mb-5">
   <p class="text-teal-200 text-xs font-semibold uppercase tracking-widest mb-1">Valor total em dívidas</p>
   <p class="text-4xl font-extrabold tabular mb-4">{{ summary.total_debt|brl }}</p>
-  <div class="grid grid-cols-3 gap-4 text-center">
+  <div class="grid grid-cols-3 gap-2 text-center">
     <div>
-      <p class="text-teal-300 text-xs mb-1">Renda comprometida</p>
-      <p class="text-xl font-bold tabular
+      <p class="text-teal-300 text-xs mb-1">Comprometida</p>
+      <p class="text-base font-bold tabular
         {% if summary.income_ratio > 50 %}text-red-300
         {% elif summary.income_ratio > 30 %}text-amber-300
         {% else %}text-emerald-300{% endif %}">
@@ -53,12 +113,12 @@
       </p>
     </div>
     <div>
-      <p class="text-teal-300 text-xs mb-1">Juros por mês</p>
-      <p class="text-xl font-bold tabular text-amber-300">{{ summary.monthly_interest|brl }}</p>
+      <p class="text-teal-300 text-xs mb-1">Juros/mês</p>
+      <p class="text-base font-bold tabular text-amber-300">{{ summary.monthly_interest|brl }}</p>
     </div>
     <div>
-      <p class="text-teal-300 text-xs mb-1">Sobra por mês</p>
-      <p class="text-xl font-bold tabular
+      <p class="text-teal-300 text-xs mb-1">Sobra/mês</p>
+      <p class="text-base font-bold tabular
         {% if summary.free_income < 0 %}text-red-300{% else %}text-white{% endif %}">
         {{ summary.free_income|brl }}
       </p>
@@ -120,6 +180,31 @@
   </div>
 </section>
 
+{# ── Simulador interativo ── #}
+<section class="card mb-5">
+  <h3 class="section-title mb-1">Simulador: quanto você tem disponível agora?</h3>
+  <p class="text-xs text-gray-400 mb-4">Arraste o slider ou digite um valor para ver qual dívida priorizar.</p>
+
+  <div class="flex flex-col sm:flex-row gap-3 items-center mb-4">
+    <input type="range" id="sim-slider"
+           min="0" max="{{ summary.total_debt|floatformat:0 }}" value="0" step="10"
+           class="flex-1 accent-teal-600 h-2 rounded-full cursor-pointer">
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="text-sm text-gray-500">R$</span>
+      <input type="number" id="sim-value"
+             min="0" max="{{ summary.total_debt|floatformat:0 }}" value="0" step="10"
+             class="w-full sm:w-32 border border-warm-200 rounded-[10px] px-3 py-2 text-sm tabular text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-400">
+    </div>
+  </div>
+
+  <div id="sim-result" class="bg-teal-50 border border-teal-100 rounded-[12px] p-4 text-sm hidden">
+    <div id="sim-result-content"></div>
+  </div>
+  <div id="sim-empty" class="text-xs text-gray-400 text-center py-2">
+    Digite um valor acima para ver a recomendação
+  </div>
+</section>
+
 {# ── Resumo da IA ── #}
 {% if analysis.summary %}
 <section class="card mb-5">
@@ -140,14 +225,29 @@
 
       <div class="debt-rank">{{ forloop.counter }}</div>
 
-      <div class="debt-info flex-1">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="debt-creditor">{{ debt.creditor }}</span>
+      <div class="flex-1 min-w-0">
+        {# Linha 1: credor + valor total #}
+        <div class="flex items-baseline justify-between gap-2">
+          <span class="debt-creditor truncate">{{ debt.creditor }}</span>
+          <span class="debt-amount tabular shrink-0
+            {% if debt.debt_status == 'paga' %}line-through text-gray-400{% endif %}">
+            {{ debt.total_amount|brl }}
+          </span>
+        </div>
+
+        {# Linha 2: tipo + parcela mensal #}
+        <div class="flex items-center justify-between mt-0.5">
+          <span class="debt-type">{{ debt.type_label }}</span>
+          {% if debt.monthly_payment %}
+          <span class="text-xs text-gray-400 tabular shrink-0">{{ debt.monthly_payment|brl }}/mês</span>
+          {% endif %}
+        </div>
+
+        {# Badges #}
+        <div class="flex flex-wrap gap-1.5 mt-2">
           {% if forloop.first %}
             <span class="badge-priority">Pague esta primeiro</span>
           {% endif %}
-          <span class="debt-type">{{ debt.type_label }}</span>
-          {# Badges de risco por tipo — sempre com ícone + label #}
           {% if debt.type == 'pensao_alimenticia' %}
             <span class="text-xs bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
               <i data-lucide="alert-circle" class="w-3 h-3"></i>Risco de prisão
@@ -167,13 +267,12 @@
           {% endif %}
           {% if debt.is_prescribed %}
             <span class="badge-prescribed inline-flex items-center gap-1">
-              <i data-lucide="clock" class="w-3 h-3"></i>Pode estar prescrita — verifique antes de pagar
+              <i data-lucide="clock" class="w-3 h-3"></i>Pode estar prescrita
             </span>
           {% endif %}
           {% if debt.prescription.urgent %}
             <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
-              <i data-lucide="clock" class="w-3 h-3"></i>
-              Prescreve em {{ debt.prescription.days_left }} dias
+              <i data-lucide="clock" class="w-3 h-3"></i>Prescreve em {{ debt.prescription.days_left }} dias
             </span>
           {% endif %}
         </div>
@@ -191,16 +290,30 @@
           {% endif %}
         </div>
         {% endif %}
-      </div>
 
-      <div class="debt-actions text-right shrink-0">
-        <div class="debt-amount tabular">{{ debt.total_amount|brl }}</div>
-        {% if debt.monthly_payment %}
-        <div class="text-xs text-gray-400 tabular">{{ debt.monthly_payment|brl }}/mês</div>
-        {% endif %}
-        <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost text-xs mt-1 block">
-          Gerar carta
-        </a>
+        {# Ações #}
+        <div class="flex items-center gap-3 mt-2 flex-wrap">
+          {% if debt.debt_status != 'paga' %}
+          <a href="/dashboard/letter/{{ debt.id }}/" class="btn-ghost text-xs">
+            <i data-lucide="file-text" class="w-3 h-3 inline-block mr-0.5"></i>Gerar carta
+          </a>
+          {% endif %}
+          <form method="POST" action="/dashboard/mark/{{ debt.id }}/" class="inline-flex items-center gap-2">
+            {% csrf_token %}
+            {% if debt.debt_status == "paga" %}
+              <span class="text-xs text-emerald-600 font-medium">&#10003; Paga</span>
+              <button name="status" value="" class="text-xs text-gray-400 hover:text-gray-600">&#8617; Desfazer</button>
+            {% elif debt.debt_status == "em_negociacao" %}
+              <span class="text-xs text-blue-600 font-medium">Em negociação</span>
+              <button name="status" value="paga" class="text-xs text-emerald-600 hover:underline">Marcar paga</button>
+              <button name="status" value="" class="text-xs text-gray-400">Cancelar</button>
+            {% else %}
+              <button name="status" value="em_negociacao" class="text-xs text-blue-500 hover:underline">
+                Em negociação
+              </button>
+            {% endif %}
+          </form>
+        </div>
       </div>
 
     </div>
@@ -232,18 +345,18 @@
     <i data-lucide="activity" class="w-4 h-4 text-teal-600"></i>
     <h3 class="section-title text-teal-800">Taxas de mercado — Banco Central</h3>
   </div>
-  <div class="grid grid-cols-3 gap-4 text-center text-sm">
+  <div class="grid grid-cols-3 gap-2 text-center text-sm">
     <div>
       <p class="text-gray-500 text-xs mb-1">SELIC</p>
-      <p class="text-xl font-bold tabular text-teal-700">{{ market.selic_anual }}%<span class="text-xs font-normal">/ano</span></p>
+      <p class="text-base font-bold tabular text-teal-700">{{ market.selic_anual }}%<span class="text-xs font-normal">/ano</span></p>
     </div>
     <div>
-      <p class="text-gray-500 text-xs mb-1">Cartão (média)</p>
-      <p class="text-xl font-bold tabular text-red-600">{{ market.juros_cartao_mensal }}%<span class="text-xs font-normal">/mês</span></p>
+      <p class="text-gray-500 text-xs mb-1">Cartão</p>
+      <p class="text-base font-bold tabular text-red-600">{{ market.juros_cartao_mensal }}%<span class="text-xs font-normal">/mês</span></p>
     </div>
     <div>
-      <p class="text-gray-500 text-xs mb-1">Empréstimo (média)</p>
-      <p class="text-xl font-bold tabular text-amber-600">{{ market.juros_emprestimo_mensal }}%<span class="text-xs font-normal">/mês</span></p>
+      <p class="text-gray-500 text-xs mb-1">Empréstimo</p>
+      <p class="text-base font-bold tabular text-amber-600">{{ market.juros_emprestimo_mensal }}%<span class="text-xs font-normal">/mês</span></p>
     </div>
   </div>
   <p class="text-xs text-teal-500 mt-3 text-center">Fonte: Banco Central do Brasil — atualizado em tempo real</p>
@@ -269,9 +382,85 @@
   <p>Esta ferramenta oferece orientação informativa com base na Lei 14.181/2021 e não constitui aconselhamento jurídico. Antes de assinar acordos, confirme com a <strong>Defensoria Pública</strong>, o <strong>PROCON</strong> ou um advogado.</p>
 </div>
 
-{# ── Chart.js ── #}
+{# ── Dados e scripts ── #}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+// Dados das dívidas para o simulador
+const DEBTS_DATA = {{ prioritized_json|safe }};
+
+// ── Simulador interativo ──
+(function() {
+  const slider = document.getElementById('sim-slider');
+  const input  = document.getElementById('sim-value');
+  const result = document.getElementById('sim-result');
+  const empty  = document.getElementById('sim-empty');
+  const content = document.getElementById('sim-result-content');
+
+  function formatBRL(v) {
+    return 'R$ ' + parseFloat(v).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
+  function simulate(available) {
+    available = parseFloat(available) || 0;
+    if (available <= 0) {
+      result.classList.add('hidden');
+      empty.classList.remove('hidden');
+      return;
+    }
+
+    // Escolhe a primeira dívida não-paga onde há valor
+    let chosen = null;
+    for (const d of DEBTS_DATA) {
+      if (d.debt_status === 'paga') continue;
+      if ((d.total_amount || 0) > 0) { chosen = d; break; }
+    }
+
+    if (!chosen) {
+      content.innerHTML = '<p class="text-teal-800 font-semibold">Parabéns! Todas as dívidas estão marcadas como pagas.</p>';
+      result.classList.remove('hidden');
+      empty.classList.add('hidden');
+      return;
+    }
+
+    const payment       = Math.min(available, chosen.total_amount);
+    const remaining     = Math.max(0, chosen.total_amount - payment);
+    const interestSaved = payment * 0.12;
+
+    let html = `
+      <p class="font-semibold text-teal-800 mb-2">Recomendação: <span class="text-teal-900">${chosen.creditor}</span></p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+        <div>
+          <p class="text-xs text-teal-600 mb-0.5">Pagar agora</p>
+          <p class="font-bold tabular text-teal-900">${formatBRL(payment)}</p>
+        </div>
+        <div>
+          <p class="text-xs text-teal-600 mb-0.5">Saldo restante</p>
+          <p class="font-bold tabular ${remaining === 0 ? 'text-emerald-600' : 'text-gray-800'}">${remaining === 0 ? '&#127881; Dívida quitada!' : formatBRL(remaining)}</p>
+        </div>
+        <div>
+          <p class="text-xs text-teal-600 mb-0.5">Juros economizados (est.)</p>
+          <p class="font-bold tabular text-emerald-700">${formatBRL(interestSaved)}/ano</p>
+        </div>
+      </div>`;
+
+    if (available > chosen.total_amount) {
+      const leftover = available - chosen.total_amount;
+      html += `<p class="text-xs text-teal-600 mt-2">Sobram ${formatBRL(leftover)} — aplique na próxima dívida da lista.</p>`;
+    }
+
+    content.innerHTML = html;
+    result.classList.remove('hidden');
+    empty.classList.add('hidden');
+  }
+
+  slider.addEventListener('input', function() { input.value = this.value; simulate(this.value); });
+  input.addEventListener('input', function() {
+    const v = Math.min(parseFloat(this.value) || 0, parseFloat(slider.max));
+    slider.value = v;
+    simulate(v);
+  });
+})();
+
 const COLORS = [
   '#2C8377','#246D65','#1D5850','#4AA9A2','#A0D3CE',
   '#77BFB9','#C9E6E3','#f97316','#eab308','#8b5cf6'

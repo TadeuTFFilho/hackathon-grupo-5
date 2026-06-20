@@ -74,17 +74,15 @@
                     focus:ring-teal-200 focus:border-teal-400 transition-all duration-150; }
 
     /* ── Debt rows ── */
-    .debt-row          { @apply flex items-start gap-4 p-4 rounded-[14px] border; }
+    .debt-row          { @apply flex items-start gap-3 p-4 rounded-[14px] border; }
     .debt-row--urgent  { @apply bg-red-50 border-red-200; }
     .debt-row--high    { @apply bg-amber-50 border-amber-200; }
     .debt-row--normal  { @apply bg-warm-50 border-warm-200; }
     .debt-rank         { @apply w-8 h-8 rounded-full bg-warm-100 flex items-center justify-center
-                                font-bold text-sm shrink-0 text-stone-600; }
-    .debt-info         { @apply flex-1 flex flex-col gap-0.5; }
-    .debt-creditor     { @apply font-semibold text-gray-900; }
-    .debt-type         { @apply text-sm text-gray-500; }
-    .debt-actions      { @apply text-right shrink-0; }
-    .debt-amount       { @apply font-bold text-gray-900 tabular-nums; }
+                                font-bold text-sm shrink-0 text-stone-600 mt-0.5; }
+    .debt-creditor     { @apply font-semibold text-gray-900 text-sm leading-snug; }
+    .debt-type         { @apply text-xs text-gray-500; }
+    .debt-amount       { @apply font-bold text-gray-900 tabular-nums text-sm; }
 
     /* ── Action plan ── */
     .action-step   { @apply flex gap-4 items-start; }

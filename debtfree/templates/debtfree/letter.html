@@ -1,4 +1,5 @@
 {% extends "debtfree/base.html" %}
+{% load debtfree_filters %}
 {% block title %}QuitAI — Carta de negociação{% endblock %}
 
 {% block content %}
@@ -16,30 +17,38 @@
     </p>
   </div>
 
-  <div class="flex gap-2 shrink-0">
+  <div class="flex gap-2 shrink-0 flex-wrap">
     <button onclick="copyLetter()"
             id="copy-btn"
             class="flex items-center gap-2 btn-secondary px-4 py-2">
       <i data-lucide="copy" class="w-4 h-4"></i>
       Copiar texto
     </button>
-    <button onclick="window.print()"
-            class="flex items-center gap-2 btn-primary px-4 py-2">
-      <i data-lucide="printer" class="w-4 h-4"></i>
-      Salvar PDF
-    </button>
+    <a id="whatsapp-btn"
+       href="#"
+       target="_blank"
+       rel="noopener"
+       class="flex items-center gap-2 btn-secondary px-4 py-2">
+      <i data-lucide="message-circle" class="w-4 h-4"></i>
+      Enviar pelo WhatsApp
+    </a>
+    <a href="/dashboard/letter/{{ debt.id }}/pdf/"
+       class="flex items-center gap-2 btn-primary px-4 py-2">
+      <i data-lucide="download" class="w-4 h-4"></i>
+      Baixar PDF
+    </a>
   </div>
 </div>
 
 {# ── Documento ── #}
 <div class="bg-white rounded-[14px] shadow-sm border border-warm-100 mb-5 overflow-hidden">
-  <div class="bg-warm-50 border-b border-warm-100 px-8 py-3 flex items-center gap-2">
-    <div class="w-3 h-3 rounded-full bg-red-300"></div>
-    <div class="w-3 h-3 rounded-full bg-amber-300"></div>
-    <div class="w-3 h-3 rounded-full bg-emerald-300"></div>
-    <span class="ml-3 text-xs text-gray-400 font-medium">carta-negociacao-{{ debt.creditor|lower }}.txt</span>
+  <div class="bg-warm-50 border-b border-warm-100 px-4 py-3 flex items-center gap-2">
+    <div class="w-3 h-3 rounded-full bg-red-300 shrink-0"></div>
+    <div class="w-3 h-3 rounded-full bg-amber-300 shrink-0"></div>
+    <div class="w-3 h-3 rounded-full bg-emerald-300 shrink-0"></div>
+    <span class="ml-2 text-xs text-gray-400 font-medium truncate min-w-0">carta-negociacao-{{ debt.creditor|lower }}.txt</span>
   </div>
-  <div class="px-8 sm:px-10 py-10">
+  <div class="px-4 sm:px-8 py-8">
     <div id="letter-content"
          class="whitespace-pre-line leading-8 text-gray-800 text-[15px] font-serif max-w-2xl mx-auto">{{ letter }}</div>
   </div>
@@ -76,6 +85,13 @@ function copyLetter() {
     }, 2000);
   });
 }
+
+// WhatsApp: monta o link com o texto da carta
+(function() {
+  const text = document.getElementById('letter-content').innerText;
+  const encoded = encodeURIComponent(text);
+  document.getElementById('whatsapp-btn').href = 'https://wa.me/?text=' + encoded;
+})();
 </script>
 
 {% endblock %}

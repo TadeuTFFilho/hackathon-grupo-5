@@ -48,8 +48,8 @@ MOCK_USERS = {
     },
 
     # Persona 1 — Carlos, controlado
-    "111.222.333-00": {
-        "cpf":      "111.222.333-00",
+    "000.000.001-00": {
+        "cpf":      "000.000.001-00",
         "password": "senha123",
         "name":      "Carlos Mendes",
         "email":     "carlos.mendes@email.com",
@@ -67,8 +67,8 @@ MOCK_USERS = {
     },
 
     # Persona 4 — Maria, dívida prescrita (edge case)
-    "444.555.666-00": {
-        "cpf":      "444.555.666-00",
+    "000.000.002-00": {
+        "cpf":      "000.000.002-00",
         "password": "senha123",
         "name":      "Maria Oliveira",
         "email":     "maria.oliveira@email.com",
@@ -241,7 +241,7 @@ MOCK_DEBT_DATA = {
     },
 
     # Carlos — controlado (Persona 1)
-    "111.222.333-00": {
+    "000.000.001-00": {
         "monthly_income": 4000,
         "situation": {"level": "safe", "label": "Controlado", "color": "green"},
         "prioritized": [
@@ -289,7 +289,7 @@ MOCK_DEBT_DATA = {
     },
 
     # Maria — dívida prescrita (Persona 4)
-    "444.555.666-00": {
+    "000.000.002-00": {
         "monthly_income": 3200,
         "situation": {"level": "safe", "label": "Controlado", "color": "green"},
         "prioritized": [

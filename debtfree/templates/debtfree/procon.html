@@ -1,0 +1,154 @@
+{% extends "debtfree/base.html" %}
+{% block title %}QuitAI — Ajuda gratuita no seu estado{% endblock %}
+
+{% block content %}
+
+<div class="mb-8">
+  <a href="{% url 'legal' %}" class="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-3 transition-all duration-150">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    Voltar
+  </a>
+  <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Ajuda gratuita</p>
+  <div class="flex items-center gap-3 flex-wrap">
+    <h2 class="text-2xl font-bold text-gray-900">Ajuda gratuita no seu estado</h2>
+    <span class="inline-flex items-center gap-1.5 bg-teal-100 text-teal-800 text-sm font-semibold px-3 py-1 rounded-full">
+      <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+      {{ state }}
+    </span>
+  </div>
+  <p class="text-gray-500 text-sm mt-1">Atendimento presencial e gratuito para quem precisa de orientação ou representação jurídica.</p>
+</div>
+
+{# ── PROCON ── #}
+{% if procon %}
+<section class="card mb-5">
+  <div class="flex items-center gap-3 mb-4">
+    <div class="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center shrink-0">
+      <i data-lucide="megaphone" class="w-5 h-5 text-white"></i>
+    </div>
+    <div>
+      <h3 class="font-bold text-gray-900 text-base">{{ procon.name }}</h3>
+      <p class="text-xs text-gray-500">Proteção e orientação ao consumidor</p>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    <div class="flex items-start gap-3 text-sm">
+      <i data-lucide="phone" class="w-4 h-4 text-teal-500 shrink-0 mt-0.5"></i>
+      <div>
+        <p class="text-xs text-gray-400 mb-0.5">Telefone</p>
+        <a href="tel:{{ procon.phone }}" class="font-semibold text-teal-700 hover:underline text-lg tabular">
+          {{ procon.phone }}
+        </a>
+        <p class="text-xs text-gray-400 mt-0.5">Ligue gratuitamente de qualquer telefone</p>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-3 text-sm">
+      <i data-lucide="map-pin" class="w-4 h-4 text-gray-400 shrink-0 mt-0.5"></i>
+      <div>
+        <p class="text-xs text-gray-400 mb-0.5">Endereço</p>
+        <p class="text-gray-700">{{ procon.address }}</p>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-3 text-sm">
+      <i data-lucide="globe" class="w-4 h-4 text-gray-400 shrink-0 mt-0.5"></i>
+      <div>
+        <p class="text-xs text-gray-400 mb-0.5">Site oficial</p>
+        <a href="{{ procon.website }}" target="_blank" rel="noopener"
+           class="text-teal-600 hover:underline break-all">
+          {{ procon.website }}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ── Defensoria Pública ── #}
+{% if defensoria %}
+<section class="card mb-5">
+  <div class="flex items-center gap-3 mb-4">
+    <div class="w-10 h-10 bg-purple-600 rounded-xl flex items-center justify-center shrink-0">
+      <i data-lucide="landmark" class="w-5 h-5 text-white"></i>
+    </div>
+    <div>
+      <h3 class="font-bold text-gray-900 text-base">{{ defensoria.name }}</h3>
+      <p class="text-xs text-gray-500">Representação jurídica gratuita</p>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    <div class="flex items-start gap-3 text-sm">
+      <i data-lucide="phone" class="w-4 h-4 text-purple-500 shrink-0 mt-0.5"></i>
+      <div>
+        <p class="text-xs text-gray-400 mb-0.5">Telefone</p>
+        <a href="tel:{{ defensoria.phone }}" class="font-semibold text-purple-700 hover:underline text-lg tabular">
+          {{ defensoria.phone }}
+        </a>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-3 text-sm">
+      <i data-lucide="map-pin" class="w-4 h-4 text-gray-400 shrink-0 mt-0.5"></i>
+      <div>
+        <p class="text-xs text-gray-400 mb-0.5">Endereço</p>
+        <p class="text-gray-700">{{ defensoria.address }}</p>
+      </div>
+    </div>
+
+    <div class="flex items-start gap-3 text-sm">
+      <i data-lucide="globe" class="w-4 h-4 text-gray-400 shrink-0 mt-0.5"></i>
+      <div>
+        <p class="text-xs text-gray-400 mb-0.5">Site oficial</p>
+        <a href="{{ defensoria.website }}" target="_blank" rel="noopener"
+           class="text-purple-600 hover:underline break-all">
+          {{ defensoria.website }}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ── Como funciona ── #}
+<section class="card mb-6">
+  <h3 class="section-title mb-4">Como funciona o atendimento</h3>
+  <div class="space-y-4">
+
+    <div class="flex gap-4">
+      <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center shrink-0 font-bold text-teal-700 text-sm">1</div>
+      <div>
+        <p class="font-semibold text-gray-900 text-sm">Ligue ou compareça ao local</p>
+        <p class="text-sm text-gray-500 mt-0.5">No PROCON você pode ligar pelo 151 (gratuito). Na Defensoria, o atendimento presencial é feito por ordem de chegada ou com agendamento.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center shrink-0 font-bold text-teal-700 text-sm">2</div>
+      <div>
+        <p class="font-semibold text-gray-900 text-sm">Leve seus documentos</p>
+        <p class="text-sm text-gray-500 mt-0.5">RG, CPF, comprovante de renda e qualquer documento das dívidas (boletos, contratos, notificações). Quanto mais informação, melhor o atendimento.</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <div class="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center shrink-0 font-bold text-teal-700 text-sm">3</div>
+      <div>
+        <p class="font-semibold text-gray-900 text-sm">O serviço é totalmente gratuito</p>
+        <p class="text-sm text-gray-500 mt-0.5">Tanto o PROCON quanto a Defensoria Pública são financiados pelo governo. Você não paga nada pelo atendimento, orientação ou representação jurídica.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="flex justify-start">
+  <a href="{% url 'dashboard' %}" class="btn-secondary inline-flex items-center gap-2">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    Voltar ao painel
+  </a>
+</div>
+
+{% endblock %}

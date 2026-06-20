@@ -67,6 +67,55 @@ def check_prescribed(due_date_str: str | None) -> bool:
         return False
 
 
+URGENT_TYPES = {"pensao_alimenticia", "aluguel", "servicos_essenciais"}
+
+
+def calculate_score(monthly_income: float, debts: list[dict]) -> dict:
+    """Calcula score de saúde financeira (0-100)."""
+    if not monthly_income:
+        return {"score": 5, "label": "Emergência", "color": "red"}
+
+    total_monthly = sum(d.get("monthly_payment", 0) or 0 for d in debts)
+    ratio = total_monthly / monthly_income * 100
+
+    if ratio <= 10:
+        base = 95
+    elif ratio <= 20:
+        base = 85
+    elif ratio <= 30:
+        base = 75
+    elif ratio <= 40:
+        base = 60
+    elif ratio <= 50:
+        base = 45
+    elif ratio <= 75:
+        base = 25
+    else:
+        base = 10
+
+    # Descontos
+    debt_penalty = min(len(debts) * 2, 12)
+    urgent_penalty = sum(
+        5 for d in debts
+        if d.get("type") in URGENT_TYPES and (d.get("monthly_payment") or 0) > 0
+    )
+
+    score = max(5, min(100, base - debt_penalty - urgent_penalty))
+
+    if score >= 80:
+        label, color = "Excelente", "green"
+    elif score >= 60:
+        label, color = "Bom", "blue"
+    elif score >= 40:
+        label, color = "Atenção", "yellow"
+    elif score >= 20:
+        label, color = "Crítico", "orange"
+    else:
+        label, color = "Emergência", "red"
+
+    return {"score": score, "label": label, "color": color}
+
+
 def enrich(debts: list[dict]) -> list[dict]:
     """Adiciona metadados calculados em cada dívida."""
     return [
