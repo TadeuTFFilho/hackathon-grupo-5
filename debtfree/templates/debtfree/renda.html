@@ -3,25 +3,6 @@
 
 {% block content %}
 
-{# ── Django Messages ── #}
-{% if messages %}
-  <div class="mb-6 space-y-2">
-    {% for message in messages %}
-      {% if message.tags == 'success' %}
-        <div class="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-[14px] px-4 py-3 text-sm">
-          <i data-lucide="check-circle" class="w-4 h-4 shrink-0 text-emerald-500"></i>
-          {{ message }}
-        </div>
-      {% else %}
-        <div class="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-[14px] px-4 py-3 text-sm">
-          <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-red-400"></i>
-          {{ message }}
-        </div>
-      {% endif %}
-    {% endfor %}
-  </div>
-{% endif %}
-
 {# ── Cabeçalho ── #}
 <div class="mb-8">
   <p class="text-xs text-teal-600 font-semibold uppercase tracking-widest mb-1">Perfil financeiro</p>
