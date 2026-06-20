@@ -9,7 +9,7 @@ def brl(value):
     try:
         v = float(value)
     except (TypeError, ValueError):
-        return str(value) if value is not None else ''
+        return 'R$ 0,00'
 
     formatted = f"{v:,.2f}"                              # "1,240.90"
     formatted = formatted.replace('.', 'X').replace(',', '.').replace('X', ',')

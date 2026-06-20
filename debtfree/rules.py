@@ -75,6 +75,10 @@ def calculate_score(monthly_income: float, debts: list[dict]) -> dict:
     if not monthly_income:
         return {"score": 5, "label": "Emergência", "color": "red"}
 
+    # Sem dívidas = score perfeito
+    if not debts:
+        return {"score": 100, "label": "Excelente", "color": "green"}
+
     total_monthly = sum(d.get("monthly_payment", 0) or 0 for d in debts)
     ratio = total_monthly / monthly_income * 100
 

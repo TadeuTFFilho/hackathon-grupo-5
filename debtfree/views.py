@@ -98,7 +98,7 @@ def register(request):
             error = "A senha deve ter no mínimo 6 caracteres."
         elif password != confirm:
             error = "As senhas não coincidem."
-        elif not income or float(income) <= 0:
+        elif not income or _parse_float(income) <= 0:
             error = "Informe sua renda mensal."
         elif not state or not city:
             error = "Informe seu estado e cidade."
@@ -115,7 +115,7 @@ def register(request):
                         name          = name,
                         email         = email,
                         phone         = phone,
-                        monthly_income= float(income),
+                        monthly_income= _parse_float(income),
                         state         = state,
                         city          = city,
                         password_hash = hash_password(password),
@@ -134,6 +134,7 @@ def register(request):
 
 def logout_view(request):
     request.session.flush()
+    messages.success(request, "Você saiu da conta com sucesso.")
     return redirect("login")
 
 
@@ -159,7 +160,13 @@ def analyze(request):
     TODO (Luis): substituir mock por chamada real à IA.
     """
     try:
-        monthly_income = float(request.POST.get("monthly_income", 0))
+        monthly_income = _parse_float(request.POST.get("monthly_income"))
+
+        # Salva o nome se o usuário editou no formulário (M-08)
+        user_name = request.POST.get("user_name", "").strip()
+        if user_name and user_name != request.session.get("user", {}).get("name"):
+            request.session["user"]["name"] = user_name
+            request.session.modified = True
 
         creditors        = request.POST.getlist("creditor")
         types            = request.POST.getlist("type")
@@ -171,8 +178,9 @@ def analyze(request):
             {
                 "creditor":        creditors[i],
                 "type":            types[i] if i < len(types) else "outros",
-                "total_amount":    float(total_amounts[i]) if i < len(total_amounts) else 0,
-                "monthly_payment": float(monthly_payments[i]) if monthly_payments[i] else 0,
+                "total_amount":    _parse_float(total_amounts[i]) if i < len(total_amounts) else 0,
+                # M-05: bounds check para monthly_payments
+                "monthly_payment": _parse_float(monthly_payments[i]) if i < len(monthly_payments) else 0,
                 "due_date":        due_dates[i] if i < len(due_dates) else None,
             }
             for i, creditor in enumerate(creditors)
@@ -210,9 +218,10 @@ def analyze(request):
         )
         return redirect("dashboard")
 
-    except Exception as e:
+    except Exception:
         return render(request, "debtfree/onboarding.html",
-                      {"error": str(e), "user": request.session.get("user")})
+                      {"error": "Ocorreu um erro ao processar suas informações. Verifique os valores digitados e tente novamente.",
+                       "user": request.session.get("user")})
 
 
 # ---------------------------------------------------------------------------
@@ -228,20 +237,27 @@ def renda(request):
 
     if request.method == "POST":
         try:
-            monthly_income = float(request.POST.get("monthly_income", 0))
+            monthly_income = _parse_float(request.POST.get("monthly_income"))
             if monthly_income <= 0:
                 raise ValueError("Renda deve ser maior que zero.")
 
             income_source = request.POST.get("income_source", "")
-            other_income = float(request.POST.get("other_income") or 0)
+            other_income  = _parse_float(request.POST.get("other_income"))
 
-            # Atualiza na sessão
+            # Atualiza na sessão (M-06: também salva income_source)
             if request.session.get("debt_data"):
-                request.session["debt_data"]["monthly_income"] = monthly_income + other_income
+                new_income = monthly_income + other_income
+                request.session["debt_data"] = {
+                    **request.session["debt_data"],
+                    "monthly_income":  new_income,
+                    "income_source":   income_source,
+                }
                 request.session.modified = True
-
-            from django.contrib import messages
-            messages.success(request, "Renda atualizada com sucesso!")
+                from django.contrib import messages  # M-07: mensagem somente quando salvou
+                messages.success(request, "Renda atualizada com sucesso!")
+            else:
+                from django.contrib import messages
+                messages.error(request, "Adicione suas dívidas primeiro para atualizar a renda.")
             return redirect("renda")
 
         except ValueError as e:
@@ -328,12 +344,16 @@ def dashboard(request):
     in_negotiation = sum(1 for d in prioritized if d.get("debt_status") == "em_negociacao")
     progress_pct = int(paid_debts / total_debts * 100) if total_debts else 0
 
-    # Distribuição para o gráfico donut (labels + valores)
-    chart_labels = [d["creditor"] for d in prioritized]
-    chart_values = [d["total_amount"] for d in prioritized]
+    # Distribuição para o gráfico donut — M-03: escape HTML para evitar XSS
+    def _safe_json(obj):
+        return json.dumps(obj, ensure_ascii=False).replace(
+            '<', r'<').replace('>', r'>').replace('/', r'/')
+
+    chart_labels_json = _safe_json([d["creditor"] for d in prioritized])
+    chart_values_json = _safe_json([d["total_amount"] for d in prioritized])
 
     # JSON completo das dívidas para o simulador (Feature 2)
-    prioritized_json = json.dumps(prioritized)
+    prioritized_json = _safe_json(prioritized)
 
     return render(request, "debtfree/dashboard.html", {
         **debt_data,
@@ -345,8 +365,8 @@ def dashboard(request):
         "paid_debts":       paid_debts,
         "in_negotiation":   in_negotiation,
         "progress_pct":     progress_pct,
-        "chart_labels":     json.dumps(chart_labels),
-        "chart_values":     json.dumps(chart_values),
+        "chart_labels":     chart_labels_json,
+        "chart_values":     chart_values_json,
         "prioritized_json": prioritized_json,
     })
 
@@ -395,14 +415,27 @@ def letter(request, debt_index):
             user_name     = user["name"],
         )
     except Exception:
+        # B-04: formato BRL correto no fallback
+        total_brl = _format_brl(debt['total_amount'])
         ai_body = (
             f"Eu, {user['name']}, CPF {user['cpf']}, venho por meio desta carta manifestar "
             f"meu interesse em regularizar a dívida com {debt['creditor']}, no valor de "
-            f"R$ {debt['total_amount']:.2f}, e solicito proposta de renegociação nos termos "
-            f"da Lei 14.181/2021."
+            f"{total_brl}, e solicito proposta de renegociação nos termos da Lei 14.181/2021."
         )
 
-    letter_text = f"""{address.get('city', 'São Paulo')}, {_today_br()}
+    # B-09: formata endereço somente com campos preenchidos
+    city    = address.get('city', '')
+    state   = address.get('state', '')
+    street  = address.get('street', '')
+    hood    = address.get('neighborhood', '')
+    zip_    = address.get('zip', '')
+    loc_parts = [p for p in [city, state] if p]
+    addr_line = f"{street}{', ' + hood if hood else ''}" if street else ""
+    loc_line  = "/".join(loc_parts) if loc_parts else "São Paulo/SP"
+    cep_line  = f" — CEP {zip_}" if zip_ else ""
+    address_str = (addr_line + (" — " if addr_line else "") + loc_line + cep_line).strip(" — ")
+
+    letter_text = f"""{city or 'São Paulo'}, {_today_br()}
 
 {debt['creditor']}
 A/C Departamento de Cobranças
@@ -533,14 +566,15 @@ def letter_pdf(request, debt_index):
             user_name      = user["name"],
         )
     except Exception:
+        total_brl = _format_brl(debt['total_amount'])
         ai_body = (
             f"Eu, {user['name']}, CPF {user['cpf']}, venho por meio desta carta manifestar "
             f"meu interesse em regularizar a dívida com {debt['creditor']}, no valor de "
-            f"R$ {debt['total_amount']:.2f}, e solicito proposta de renegociação nos termos "
-            f"da Lei 14.181/2021."
+            f"{total_brl}, e solicito proposta de renegociação nos termos da Lei 14.181/2021."
         )
 
-    letter_text = f"""{address.get('city', 'São Paulo')}, {_today_br()}
+    city = address.get('city', 'São Paulo')
+    letter_text = f"""{city}, {_today_br()}
 
 {debt['creditor']}
 A/C Departamento de Cobranças
@@ -717,8 +751,8 @@ def debt_add(request):
         try:
             creditor        = request.POST.get("creditor", "").strip()
             debt_type       = request.POST.get("type", "outros")
-            total_amount    = float(request.POST.get("total_amount", 0) or 0)
-            monthly_payment = float(request.POST.get("monthly_payment", 0) or 0)
+            total_amount    = _parse_float(request.POST.get("total_amount"))
+            monthly_payment = _parse_float(request.POST.get("monthly_payment"))
             due_date        = request.POST.get("due_date", "").strip() or None
 
             if not creditor or total_amount <= 0:
@@ -795,8 +829,8 @@ def debt_edit(request, debt_index):
         try:
             creditor        = request.POST.get("creditor", "").strip()
             debt_type       = request.POST.get("type", "outros")
-            total_amount    = float(request.POST.get("total_amount", 0) or 0)
-            monthly_payment = float(request.POST.get("monthly_payment", 0) or 0)
+            total_amount    = _parse_float(request.POST.get("total_amount"))
+            monthly_payment = _parse_float(request.POST.get("monthly_payment"))
             due_date        = request.POST.get("due_date", "").strip() or None
 
             if not creditor or total_amount <= 0:
@@ -866,6 +900,36 @@ def debt_delete(request, debt_index):
             pass
     messages.success(request, "Dívida removida da lista.")
     return redirect("dashboard")
+
+
+def _parse_float(value, default=0.0) -> float:
+    """
+    Converte string de input do usuário para float.
+    Aceita tanto formato BR (1.234,56) quanto EN (1234.56).
+    """
+    if value is None:
+        return default
+    s = str(value).strip()
+    if not s:
+        return default
+    # Remove separadores de milhar (ponto quando seguido de 3 dígitos + vírgula/fim)
+    # Estratégia: se tem vírgula, ela é o separador decimal; remove pontos de milhar
+    if ',' in s:
+        s = s.replace('.', '').replace(',', '.')
+    try:
+        return float(s)
+    except ValueError:
+        return default
+
+
+def _format_brl(value: float) -> str:
+    """Formata número como moeda BRL: R$ 1.240,90"""
+    try:
+        v = float(value)
+        formatted = f"{v:,.2f}".replace('.', 'X').replace(',', '.').replace('X', ',')
+        return f"R$ {formatted}"
+    except (TypeError, ValueError):
+        return "R$ 0,00"
 
 
 def _today_br():

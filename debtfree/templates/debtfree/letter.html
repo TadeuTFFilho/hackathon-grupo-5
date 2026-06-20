@@ -73,7 +73,8 @@
 function copyLetter() {
   const text = document.getElementById('letter-content').innerText;
   const btn = document.getElementById('copy-btn');
-  navigator.clipboard.writeText(text).then(() => {
+
+  function onCopied() {
     const original = btn.innerHTML;
     btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Copiado!';
     btn.classList.add('text-emerald-600', 'border-emerald-300');
@@ -83,7 +84,25 @@ function copyLetter() {
       btn.classList.remove('text-emerald-600', 'border-emerald-300');
       if (window.lucide) lucide.createIcons();
     }, 2000);
-  });
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); onCopied(); } catch (e) { alert('Não foi possível copiar. Por favor, selecione o texto manualmente.'); }
+    document.body.removeChild(ta);
+  }
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(onCopied).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
 }
 
 // WhatsApp: monta o link com o texto da carta
