@@ -35,12 +35,6 @@
       </span>
       <p class="text-xs text-red-700 max-w-xs text-right hidden sm:block">Sua renda não cobre suas dívidas. Você tem direitos — vamos usá-los.</p>
     {% endif %}
-    {% if prioritized %}
-    <a href="{% url 'onboarding' %}" class="btn-primary text-sm inline-flex items-center gap-1.5">
-      Adicionar dívida
-      <i data-lucide="plus" class="w-4 h-4"></i>
-    </a>
-    {% endif %}
   </div>
 </div>
 
@@ -179,9 +173,9 @@
   </div>
   <h3 class="font-semibold text-gray-800 text-base mb-1">Nenhuma dívida cadastrada</h3>
   <p class="text-gray-500 text-sm max-w-xs mx-auto mb-5">Adicione suas dívidas para receber seu plano personalizado de quitação com IA.</p>
-  <a href="{% url 'debt_add' %}" class="btn-primary inline-flex items-center gap-2">
-    <i data-lucide="plus" class="w-4 h-4"></i>
-    Adicionar primeira dívida
+  <a href="{% url 'debts_list' %}" class="btn-primary inline-flex items-center gap-2">
+    <i data-lucide="credit-card" class="w-4 h-4"></i>
+    Ir para Minhas Dívidas
   </a>
 </div>
 {% endif %}
@@ -247,13 +241,8 @@
 {# ── Ranking de dívidas ── #}
 {% if prioritized %}
 <section class="card mb-5">
-  <div class="flex items-center justify-between mb-4">
+  <div class="mb-4">
     <h3 class="section-title">Pague nessa ordem</h3>
-    <a href="{% url 'debt_add' %}"
-       class="inline-flex items-center gap-1.5 text-xs font-medium text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-full transition-colors">
-      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-      Adicionar
-    </a>
   </div>
   <div class="space-y-3">
     {% for debt in prioritized %}

@@ -54,6 +54,14 @@
 </template>
 
 <script>
+function updateRemoveButtons() {
+  const rows = document.querySelectorAll('#debts-container .remove-debt-row');
+  // Se só tem uma linha, esconde o × dela; se tem mais, mostra em todas
+  rows.forEach(btn => {
+    btn.style.display = rows.length > 1 ? 'flex' : 'none';
+  });
+}
+
 function addDebt() {
   const container = document.getElementById('debts-container');
   const template  = document.getElementById('debt-row-template').innerHTML;
@@ -61,7 +69,16 @@ function addDebt() {
   div.innerHTML = template;
   container.appendChild(div.firstElementChild);
   if (window.lucide) lucide.createIcons();
+  updateRemoveButtons();
 }
+
+function removeDebtRow(btn) {
+  btn.closest('.grid').remove();
+  updateRemoveButtons();
+}
+
+// Estado inicial
+updateRemoveButtons();
 </script>
 
 {% endblock %}
