@@ -26,13 +26,10 @@
           <label for="id_monthly_income" class="text-sm font-medium text-gray-700">
             Quanto você recebe por mês? <span class="text-teal-500">*</span>
           </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm font-medium pointer-events-none">R$</span>
-            <input id="id_monthly_income" type="text" inputmode="decimal" name="monthly_income"
-                   placeholder="0,00"
-                   value="{{ form_data.monthly_income|default:'' }}"
-                   required class="input pl-10" />
-          </div>
+          <input id="id_monthly_income" type="text" inputmode="decimal" name="monthly_income"
+                 placeholder="R$ 0,00"
+                 value="{{ form_data.monthly_income|default:'' }}"
+                 data-brl required class="input" />
         </div>
 
         {# Fonte de renda #}
@@ -52,21 +49,6 @@
               <i data-lucide="chevron-down" class="w-4 h-4"></i>
             </span>
           </div>
-        </div>
-
-        {# Outras rendas #}
-        <div class="flex flex-col gap-1">
-          <label for="id_other_income" class="text-sm font-medium text-gray-700">
-            Outras rendas mensais <span class="text-gray-400 font-normal">(opcional)</span>
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm font-medium pointer-events-none">R$</span>
-            <input id="id_other_income" type="text" inputmode="decimal" name="other_income"
-                   placeholder="0,00"
-                   value="{{ form_data.other_income|default:'' }}"
-                   class="input pl-10" />
-          </div>
-          <p class="text-xs text-gray-400">Aluguel recebido, bicos, pensão alimentícia recebida, etc.</p>
         </div>
 
       </div>

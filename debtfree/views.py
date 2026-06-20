@@ -249,24 +249,29 @@ def renda(request):
             income_source = request.POST.get("income_source", "")
             other_income  = _parse_float(request.POST.get("other_income"))
 
-            # Atualiza na sessão (M-06: também salva income_source)
-            if request.session.get("debt_data"):
-                new_income = monthly_income + other_income
-                request.session["debt_data"] = {
-                    **request.session["debt_data"],
-                    "monthly_income":  new_income,
-                    "income_source":   income_source,
-                }
-                request.session.modified = True
-                from django.contrib import messages  # M-07: mensagem somente quando salvou
-                messages.success(request, "Renda atualizada com sucesso!")
-            else:
-                from django.contrib import messages
-                messages.error(request, "Adicione suas dívidas primeiro para atualizar a renda.")
+            new_income = monthly_income + other_income
+
+            # Atualiza debt_data na sessão (cria se ainda não existir)
+            existing = request.session.get("debt_data") or {}
+            request.session["debt_data"] = {
+                **existing,
+                "monthly_income": new_income,
+                "income_source":  income_source,
+            }
+            request.session.modified = True
+
+            # Para usuários DB, persiste a renda no banco também
+            if user.get("is_db_user") and user.get("db_pk"):
+                try:
+                    from .models import UserProfile
+                    UserProfile.objects.filter(pk=user["db_pk"]).update(monthly_income=new_income)
+                except Exception:
+                    pass
+
+            messages.success(request, "Renda atualizada com sucesso!")
             return redirect("renda")
 
         except ValueError as e:
-            from django.contrib import messages
             messages.error(request, str(e))
             form_data = {
                 "monthly_income": request.POST.get("monthly_income", ""),
@@ -910,15 +915,20 @@ def debt_delete(request, debt_index):
 def _parse_float(value, default=0.0) -> float:
     """
     Converte string de input do usuário para float.
-    Aceita tanto formato BR (1.234,56) quanto EN (1234.56).
+    Aceita formato BR (R$ 1.234,56 ou 1.234,56) e EN (1234.56).
     """
     if value is None:
         return default
     s = str(value).strip()
     if not s:
         return default
-    # Remove separadores de milhar (ponto quando seguido de 3 dígitos + vírgula/fim)
-    # Estratégia: se tem vírgula, ela é o separador decimal; remove pontos de milhar
+    # Strip prefixo monetário (R$, espaços, símbolos)
+    while s and not (s[0].isdigit() or s[0] == '-'):
+        s = s[1:]
+    s = s.strip()
+    if not s:
+        return default
+    # BR format: vírgula = decimal → remove pontos de milhar, troca vírgula por ponto
     if ',' in s:
         s = s.replace('.', '').replace(',', '.')
     try:

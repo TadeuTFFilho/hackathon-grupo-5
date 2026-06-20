@@ -67,8 +67,10 @@ function addDebt() {
   const template  = document.getElementById('debt-row-template').innerHTML;
   const div = document.createElement('div');
   div.innerHTML = template;
-  container.appendChild(div.firstElementChild);
+  const newRow = div.firstElementChild;
+  container.appendChild(newRow);
   if (window.lucide) lucide.createIcons();
+  if (window.setupBrlInputs) setupBrlInputs(newRow);
   updateRemoveButtons();
 }
 

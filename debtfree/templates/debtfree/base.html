@@ -254,6 +254,66 @@
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script>lucide.createIcons();</script>
 
+  {# ── Máscara BRL global — aplica em qualquer input[data-brl] ── #}
+  <script>
+  (function () {
+    function formatBrl(num) {
+      if (isNaN(num) || num <= 0) return '';
+      return 'R$ ' + num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // Converte string (BR ou EN ou float Python) para float
+    function parseBrl(s) {
+      s = String(s).replace(/R\$\s*/g, '').trim();
+      if (!s) return NaN;
+      // BR format: tem vírgula → vírgula é decimal
+      if (s.indexOf(',') > -1) {
+        s = s.replace(/\./g, '').replace(',', '.');
+      }
+      return parseFloat(s);
+    }
+
+    window.setupBrlInputs = function (root) {
+      (root || document).querySelectorAll('[data-brl]').forEach(function (input) {
+        if (input._brlSetup) return;
+        input._brlSetup = true;
+
+        // Formata valor inicial (ex: "10000.0" vindo do Python)
+        if (input.value) {
+          var num = parseBrl(input.value);
+          if (!isNaN(num) && num > 0) input.value = formatBrl(num);
+        }
+
+        // Máscara em tempo real: extrai dígitos e converte em centavos (da direita)
+        input.addEventListener('input', function () {
+          var digits = this.value.replace(/\D/g, '');
+          if (!digits) { this.value = ''; return; }
+          var cents = parseInt(digits, 10);
+          this.value = formatBrl(cents / 100);
+          // Cursor sempre no fim
+          this.setSelectionRange(this.value.length, this.value.length);
+        });
+
+        // Paste: interpreta o valor colado e formata
+        input.addEventListener('paste', function () {
+          var self = this;
+          setTimeout(function () {
+            var num = parseBrl(self.value);
+            if (!isNaN(num) && num > 0) {
+              self.value = formatBrl(num);
+            } else {
+              var digits = self.value.replace(/\D/g, '');
+              if (digits) self.value = formatBrl(parseInt(digits, 10) / 100);
+            }
+          }, 0);
+        });
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', function () { window.setupBrlInputs(); });
+  })();
+  </script>
+
   {# ── Service Worker ── #}
   <script>
     if ('serviceWorker' in navigator) {
