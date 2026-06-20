@@ -11,17 +11,26 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [
     "https://*.ngrok-free.app",
+    "https://*.ngrok-free.dev",
     "https://*.ngrok.io",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
 
 INSTALLED_APPS = [
+    "django.contrib.contenttypes",
     "django.contrib.staticfiles",
     "django.contrib.sessions",
     "django.contrib.messages",
     "debtfree",
 ]
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
