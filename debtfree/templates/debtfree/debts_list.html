@@ -11,11 +11,13 @@
     <h2 class="text-2xl font-bold text-gray-900">Minhas dívidas</h2>
     <p class="text-gray-500 text-sm mt-1">{{ prioritized|length }} dívida{{ prioritized|length|pluralize:"s" }} cadastrada{{ prioritized|length|pluralize:"s" }}</p>
   </div>
+  {% if prioritized %}
   <a href="{% url 'debt_add' %}"
      class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-full transition-colors">
     <i data-lucide="plus" class="w-4 h-4"></i>
     Adicionar
   </a>
+  {% endif %}
 </div>
 
 {% if not prioritized %}

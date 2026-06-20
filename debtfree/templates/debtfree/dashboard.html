@@ -35,10 +35,12 @@
       </span>
       <p class="text-xs text-red-700 max-w-xs text-right hidden sm:block">Sua renda não cobre suas dívidas. Você tem direitos — vamos usá-los.</p>
     {% endif %}
+    {% if prioritized %}
     <a href="{% url 'onboarding' %}" class="btn-primary text-sm inline-flex items-center gap-1.5">
       Adicionar dívida
       <i data-lucide="plus" class="w-4 h-4"></i>
     </a>
+    {% endif %}
   </div>
 </div>
 
@@ -82,7 +84,8 @@
     </div>
   </div>
 
-  {# Progresso de dívidas #}
+  {# Progresso de dívidas — só com dívidas cadastradas #}
+  {% if prioritized %}
   <div class="card flex-1">
     <p class="text-xs text-gray-400 uppercase tracking-widest font-semibold mb-2">Progresso</p>
     <div class="flex items-center gap-2 mb-2">
@@ -99,6 +102,7 @@
       {% endif %}
     </p>
   </div>
+  {% endif %}
 </div>
 
 {# ── Bloco total — superfície rica teal-700 ── #}
@@ -129,7 +133,8 @@
   </div>
 </div>
 
-{# ── Barra de comprometimento ── #}
+{# ── Barra de comprometimento — só com dívidas ── #}
+{% if prioritized %}
 <div class="card mb-5">
   <h3 class="section-title mb-3">Comprometimento da renda</h3>
   <div class="flex justify-between text-xs text-gray-400 mb-1">
@@ -164,6 +169,7 @@
   </div>
   {% endif %}
 </div>
+{% endif %}
 
 {# ── Empty state quando não há dívidas ── #}
 {% if not prioritized %}
