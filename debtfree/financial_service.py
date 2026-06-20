@@ -15,11 +15,12 @@ BCB_SERIES = {
 }
 
 # Fallback caso a API esteja indisponível
+# Valores de referência BCB — jun/2025
 FALLBACK_RATES = {
-    "selic_meta":            14.25,
-    "juros_cartao":          33.84,
-    "juros_emprestimo":      13.08,
-    "juros_cheque_especial": 7.93,
+    "selic_meta":            14.75,   # SELIC meta % a.a.
+    "juros_cartao":          15.10,   # Cartão rotativo total % a.m. (BCB 20714)
+    "juros_emprestimo":       6.24,   # Empréstimo pessoal % a.m. (BCB 20754)
+    "juros_cheque_especial":  7.93,   # Cheque especial % a.m.
 }
 
 # Taxas de juros típicas por tipo de dívida (ao mês)

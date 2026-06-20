@@ -12,10 +12,12 @@ urlpatterns = [
 
     path("renda/",                views.renda,        name="renda"),
 
-    path("perfil/",               views.perfil,    name="perfil"),
+    path("perfil/",               views.perfil,      name="perfil"),
+    path("perfil/editar/",        views.perfil_edit, name="perfil_edit"),
 
     # Tadeu — resultados e ação
-    path("dashboard/",                                   views.dashboard,  name="dashboard"),
+    path("dashboard/",                                   views.dashboard,    name="dashboard"),
+    path("debts/",                                       views.debts_list,   name="debts_list"),
     path("dashboard/legal/",                             views.legal,      name="legal"),
     path("dashboard/letter/<int:debt_index>/",           views.letter,     name="letter"),
     path("dashboard/letter/<int:debt_index>/pdf/",       views.letter_pdf, name="letter_pdf"),

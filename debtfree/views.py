@@ -3,6 +3,7 @@ import os
 from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.http import HttpResponse
+from django.contrib import messages
 from django.conf import settings
 
 from .rules import enrich, prioritize, classify_situation, calculate_score
@@ -99,6 +100,8 @@ def register(request):
             error = "As senhas não coincidem."
         elif not income or float(income) <= 0:
             error = "Informe sua renda mensal."
+        elif not state or not city:
+            error = "Informe seu estado e cidade."
         elif get_user_by_cpf(cpf):
             error = "Este CPF já está cadastrado."
         else:
@@ -349,6 +352,22 @@ def dashboard(request):
 
 
 @login_required
+def debts_list(request):
+    """Página dedicada de listagem e gestão de dívidas (aba 'Dívidas')."""
+    user      = request.session["user"]
+    debt_data = _get_debt_data(request)
+    market    = get_market_rates()
+    prioritized = debt_data["prioritized"]
+    income      = debt_data["monthly_income"]
+    summary     = financial_summary(income, prioritized, market)
+    return render(request, "debtfree/debts_list.html", {
+        **debt_data,
+        "user":    user,
+        "summary": summary,
+    })
+
+
+@login_required
 def legal(request):
     user      = request.session["user"]
     debt_data = _get_debt_data(request)
@@ -416,6 +435,71 @@ def perfil(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
+def perfil_edit(request):
+    user  = request.session["user"]
+    is_db = user.get("is_db_user", False)
+    error = None
+    form  = {}
+
+    if request.method == "POST":
+        form         = request.POST
+        name         = request.POST.get("name", "").strip()
+        email        = request.POST.get("email", "").strip()
+        phone        = request.POST.get("phone", "").strip()
+        state        = request.POST.get("state", "").strip()
+        city         = request.POST.get("city", "").strip()
+        neighborhood = request.POST.get("neighborhood", "").strip()
+        street       = request.POST.get("street", "").strip()
+        zip_code     = request.POST.get("zip_code", "").strip()
+
+        if not state or not city:
+            error = "Estado e cidade são obrigatórios."
+        else:
+            if is_db:
+                try:
+                    from .models import UserProfile
+                    db_user = UserProfile.objects.get(pk=user["db_pk"])
+                    if name:         db_user.name         = name
+                    if email:        db_user.email        = email
+                    if phone:        db_user.phone        = phone
+                    db_user.state        = state
+                    db_user.city         = city
+                    db_user.neighborhood = neighborhood
+                    db_user.street       = street
+                    db_user.zip_code     = zip_code
+                    db_user.save()
+                    request.session["user"] = db_user.to_session_dict()
+                    request.session.modified = True
+                except Exception as e:
+                    error = f"Erro ao salvar: {e}"
+            else:
+                # Mock user — atualiza só a sessão
+                if name:  request.session["user"]["name"]  = name
+                if email: request.session["user"]["email"] = email
+                if phone: request.session["user"]["phone"] = phone
+                request.session["user"]["address"] = {
+                    "state":        state,
+                    "city":         city,
+                    "neighborhood": neighborhood,
+                    "street":       street,
+                    "zip":          zip_code,
+                }
+                request.session.modified = True
+
+            if not error:
+                messages.success(request, "Dados atualizados com sucesso.")
+                return redirect("perfil")
+
+    return render(request, "debtfree/perfil_edit.html", {
+        "user":   request.session["user"],
+        "form":   form,
+        "states": BRAZIL_STATES,
+        "error":  error,
+    })
+
+
+@login_required
 def procon(request):
     from .procon_data import PROCON_BY_STATE
     user = request.session["user"]
@@ -431,9 +515,7 @@ def procon(request):
 
 @login_required
 def letter_pdf(request, debt_index):
-    """Gera PDF da carta de negociação com xhtml2pdf."""
-    from xhtml2pdf import pisa
-    import io
+    """Página de impressão da carta — o browser gera o PDF nativamente."""
     user = request.session["user"]
     debt_data = _get_debt_data(request)
     try:
@@ -443,12 +525,12 @@ def letter_pdf(request, debt_index):
 
     address = user.get("address", {})
 
-    # Gera corpo da carta via IA
+    # Gera corpo via IA
     try:
         ai_body = generate_letter(
-            debt          = debt,
-            monthly_income= debt_data["monthly_income"],
-            user_name     = user["name"],
+            debt           = debt,
+            monthly_income = debt_data["monthly_income"],
+            user_name      = user["name"],
         )
     except Exception:
         ai_body = (
@@ -472,37 +554,79 @@ Atenciosamente,
 CPF: {user['cpf']}
 Telefone: {user['phone']}"""
 
-    html_content = f"""<!DOCTYPE html>
-<html>
+    # Retorna HTML otimizado para impressão — browser faz "Salvar como PDF"
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<title>Carta — {debt['creditor']}</title>
 <style>
-    body {{ font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.6; margin: 2cm; color: #1a1a1a; }}
-    .header {{ border-bottom: 2px solid #028090; padding-bottom: 12px; margin-bottom: 24px; }}
-    .header h1 {{ font-size: 14pt; color: #028090; margin: 0; }}
-    .header p {{ font-size: 10pt; color: #666; margin: 4px 0 0; }}
-    .letter {{ white-space: pre-line; }}
-    .footer {{ margin-top: 40px; border-top: 1px solid #ccc; padding-top: 12px; font-size: 9pt; color: #888; }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 12pt;
+    line-height: 1.7;
+    color: #111;
+    padding: 2.5cm 3cm;
+    max-width: 21cm;
+    margin: 0 auto;
+  }}
+  .header {{
+    border-bottom: 2px solid #028090;
+    padding-bottom: 12px;
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }}
+  .header-brand {{ font-size: 11pt; color: #028090; font-weight: bold; }}
+  .header-sub {{ font-size: 9pt; color: #888; margin-top: 3px; }}
+  .letter {{ white-space: pre-line; margin-bottom: 40px; }}
+  .footer {{
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    font-size: 8pt;
+    color: #aaa;
+  }}
+  .no-print {{
+    position: fixed;
+    top: 16px; right: 16px;
+    background: #028090;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: system-ui, sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }}
+  @media print {{
+    .no-print {{ display: none; }}
+    body {{ padding: 0; }}
+  }}
 </style>
 </head>
 <body>
+<button class="no-print" onclick="window.print()">⬇ Baixar / Imprimir PDF</button>
 <div class="header">
-    <h1>Carta de Negociação — QuitAI</h1>
-    <p>Gerada com base na Lei 14.181/2021 · Caráter informativo, não constitui aconselhamento jurídico</p>
+  <div>
+    <div class="header-brand">QuitAI — Carta de Negociação</div>
+    <div class="header-sub">Gerada com base na Lei 14.181/2021 · Caráter informativo</div>
+  </div>
 </div>
 <div class="letter">{letter_text}</div>
 <div class="footer">Gerado pelo QuitAI · Para situações complexas, consulte a Defensoria Pública ou o PROCON.</div>
+<script>
+  // Abre diálogo de impressão automaticamente após carregar
+  window.addEventListener('load', function() {{
+    setTimeout(function() {{ window.print(); }}, 600);
+  }});
+</script>
 </body>
 </html>"""
 
-    buffer = io.BytesIO()
-    pisa.CreatePDF(html_content, dest=buffer)
-    buffer.seek(0)
-
-    filename = f"carta-negociacao-{debt['creditor'].lower().replace(' ', '-')}.pdf"
-    response = HttpResponse(buffer.read(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    return response
+    return HttpResponse(html, content_type="text/html; charset=utf-8")
 
 
 @login_required
@@ -549,17 +673,23 @@ def _init_session_debts(request):
 
 
 def _recalc_session(request):
-    """Recalcula situation e reordena prioridades após edição."""
-    from .rules import classify_situation, prioritize, enrich
-    data = request.session["debt_data"]
-    income = data["monthly_income"]
-    debts = data["prioritized"]
-    # Preserva debt_status e id existentes, reaplica regras
+    """Recalcula situation e reordena prioridades após edição.
+    Faz reassign explícito do top-level key para garantir que
+    signed_cookies serialize a sessão atualizada."""
+    from .rules import classify_situation, enrich
+    data   = request.session.get("debt_data", {})
+    income = data.get("monthly_income", 0)
+    debts  = list(data.get("prioritized", []))
     enriched = enrich(debts)
     for i, d in enumerate(enriched):
         d["id"] = i
-    data["situation"] = classify_situation(income, enriched)
-    data["prioritized"] = enriched
+    # Reassign completo — evita problema de mutação aninhada com signed_cookies
+    request.session["debt_data"] = {
+        "monthly_income": income,
+        "situation":      classify_situation(income, enriched),
+        "prioritized":    enriched,
+        "analysis":       data.get("analysis"),
+    }
     request.session.modified = True
 
 
@@ -623,6 +753,7 @@ def debt_add(request):
                 }
                 request.session["debt_data"]["prioritized"].append(new_debt)
                 _recalc_session(request)
+            messages.success(request, f"Dívida com {creditor} adicionada com sucesso.")
             return redirect("dashboard")
         except ValueError as e:
             error = str(e)
@@ -694,6 +825,7 @@ def debt_edit(request, debt_index):
                     "due_date":        due_date,
                 })
                 _recalc_session(request)
+            messages.success(request, f"Dívida com {creditor} atualizada com sucesso.")
             return redirect("dashboard")
         except ValueError as e:
             error = str(e)
@@ -732,6 +864,7 @@ def debt_delete(request, debt_index):
             _recalc_session(request)
         except IndexError:
             pass
+    messages.success(request, "Dívida removida da lista.")
     return redirect("dashboard")
 
 
