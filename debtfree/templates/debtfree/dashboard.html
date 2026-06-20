@@ -35,7 +35,10 @@
       </span>
       <p class="text-xs text-red-700 max-w-xs text-right hidden sm:block">Sua renda não cobre suas dívidas. Você tem direitos — vamos usá-los.</p>
     {% endif %}
-    <a href="{% url 'onboarding' %}" class="btn-secondary text-xs">Editar dívidas</a>
+    <a href="{% url 'onboarding' %}" class="btn-primary text-sm inline-flex items-center gap-1.5">
+      Adicionar dívida
+      <i data-lucide="plus" class="w-4 h-4"></i>
+    </a>
   </div>
 </div>
 

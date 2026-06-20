@@ -105,10 +105,52 @@
 
     /* ── Tabular nums for money ── */
     .tabular { font-variant-numeric: tabular-nums; }
+
+    /* ── Toast ── */
+    .toast { animation: toast-in .24s ease-out; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .toast { animation: none; }
+    }
   </style>
 </head>
 
 <body class="bg-warm-50 min-h-screen font-sans text-gray-900 antialiased">
+
+  {# ── Toasts (Django messages) — feedback global ── #}
+  {% if messages %}
+  <div id="toast-region" class="fixed top-4 left-1/2 -translate-x-1/2 z-[60] w-full max-w-sm px-4 space-y-2 pointer-events-none">
+    {% for message in messages %}
+    <div class="toast pointer-events-auto flex items-start gap-3 rounded-[14px] px-4 py-3 text-sm shadow-lg border
+      {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800
+      {% elif message.tags == 'error' %}bg-red-50 border-red-200 text-red-700
+      {% else %}bg-white border-warm-200 text-gray-700{% endif %}"
+      role="status" aria-live="polite">
+      <i data-lucide="{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}alert-circle{% else %}info{% endif %}"
+         class="w-4 h-4 shrink-0 mt-0.5
+         {% if message.tags == 'success' %}text-emerald-500{% elif message.tags == 'error' %}text-red-400{% else %}text-gray-400{% endif %}"></i>
+      <span class="flex-1">{{ message }}</span>
+      <button type="button" onclick="this.closest('.toast').remove()"
+              class="shrink-0 opacity-50 hover:opacity-100 transition" aria-label="Fechar aviso">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  <script>
+    setTimeout(function () {
+      document.querySelectorAll('#toast-region .toast').forEach(function (t) {
+        t.style.transition = 'opacity .32s ease, transform .32s ease';
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(-8px)';
+        setTimeout(function () { t.remove(); }, 320);
+      });
+    }, 4000);
+  </script>
+  {% endif %}
 
   {# ── Navbar — apenas desktop ── #}
   <nav class="hidden md:block bg-white border-b border-warm-100">
