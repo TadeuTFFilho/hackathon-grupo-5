@@ -20,31 +20,10 @@
 
 <form action="{% url 'analyze' %}" method="POST">
   {% csrf_token %}
+  {# Renda vem do perfil do usuário — não precisa redigitar #}
+  <input type="hidden" name="monthly_income" value="{{ debt_data.monthly_income|default:monthly_income|default:'0' }}">
 
-  {# ── Passo 1: Dados gerais ── #}
-  <div class="card mb-5">
-    <h3 class="section-title text-gray-800 border-b border-warm-100 pb-3 mb-4">Dados gerais</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">Seu nome</label>
-        <input type="text" name="user_name" placeholder="Ex: Maria Silva"
-               value="{{ user.name|default:'' }}"
-               class="input" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1.5">
-          Quanto você recebe por mês? <span class="text-teal-500">*</span>
-        </label>
-        <div class="relative">
-          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm font-medium pointer-events-none">R$</span>
-          <input type="text" inputmode="decimal" name="monthly_income" placeholder="0,00" required
-                 class="input pl-10" />
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {# ── Passo 2: Dívidas ── #}
+  {# ── Dívidas ── #}
   <div class="card mb-5">
     <div class="flex items-center justify-between border-b border-warm-100 pb-3 mb-4">
       <h3 class="section-title text-gray-800">Suas dívidas</h3>
@@ -65,8 +44,8 @@
           class="w-full flex items-center justify-center gap-2
                  bg-teal-500 hover:bg-teal-600 active:scale-[0.98]
                  text-white font-semibold py-4 rounded-full text-base transition-all duration-150 shadow-sm">
-    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-    Analisar minha situação
+    Salvar dívidas e ver meu painel
+    <i data-lucide="arrow-right" class="w-5 h-5"></i>
   </button>
 </form>
 

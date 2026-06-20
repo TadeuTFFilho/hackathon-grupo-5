@@ -53,19 +53,19 @@
 
     {# Valor total #}
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5">Valor total da dívida (R$) <span class="text-red-400">*</span></label>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Valor total da dívida <span class="text-red-400">*</span></label>
       <input type="text" inputmode="decimal" name="total_amount"
              value="{{ form.total_amount|default:'' }}"
-             placeholder="0,00"
+             placeholder="R$ 0,00"
              class="input" required>
     </div>
 
     {# Parcela mensal #}
     <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1.5">Parcela mensal (R$)</label>
+      <label class="block text-sm font-medium text-gray-700 mb-1.5">Parcela mensal</label>
       <input type="text" inputmode="decimal" name="monthly_payment"
              value="{{ form.monthly_payment|default:'' }}"
-             placeholder="0,00 — deixe vazio se não tiver parcela"
+             placeholder="R$ 0,00"
              class="input">
     </div>
 

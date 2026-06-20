@@ -148,8 +148,13 @@ def home(request):
 
 @login_required
 def onboarding(request):
-    user = request.session["user"]
-    return render(request, "debtfree/onboarding.html", {"user": user})
+    user      = request.session["user"]
+    debt_data = _get_debt_data(request)
+    return render(request, "debtfree/onboarding.html", {
+        "user":           user,
+        "debt_data":      debt_data,
+        "monthly_income": debt_data.get("monthly_income", 0),
+    })
 
 
 @login_required
