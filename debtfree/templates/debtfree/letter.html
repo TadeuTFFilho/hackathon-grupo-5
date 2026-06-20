@@ -16,18 +16,26 @@
     </p>
   </div>
 
-  <div class="flex gap-2 shrink-0">
+  <div class="flex gap-2 shrink-0 flex-wrap">
     <button onclick="copyLetter()"
             id="copy-btn"
             class="flex items-center gap-2 btn-secondary px-4 py-2">
       <i data-lucide="copy" class="w-4 h-4"></i>
       Copiar texto
     </button>
-    <button onclick="window.print()"
-            class="flex items-center gap-2 btn-primary px-4 py-2">
-      <i data-lucide="printer" class="w-4 h-4"></i>
-      Salvar PDF
-    </button>
+    <a id="whatsapp-btn"
+       href="#"
+       target="_blank"
+       rel="noopener"
+       class="flex items-center gap-2 btn-secondary px-4 py-2">
+      <i data-lucide="message-circle" class="w-4 h-4"></i>
+      Enviar pelo WhatsApp
+    </a>
+    <a href="/dashboard/letter/{{ debt.id }}/pdf/"
+       class="flex items-center gap-2 btn-primary px-4 py-2">
+      <i data-lucide="download" class="w-4 h-4"></i>
+      Baixar PDF
+    </a>
   </div>
 </div>
 
@@ -76,6 +84,13 @@ function copyLetter() {
     }, 2000);
   });
 }
+
+// WhatsApp: monta o link com o texto da carta
+(function() {
+  const text = document.getElementById('letter-content').innerText;
+  const encoded = encodeURIComponent(text);
+  document.getElementById('whatsapp-btn').href = 'https://wa.me/?text=' + encoded;
+})();
 </script>
 
 {% endblock %}

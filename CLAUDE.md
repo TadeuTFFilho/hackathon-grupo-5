@@ -60,10 +60,35 @@ Prioridade: `session["debt_data"]` → `MOCK_DEBT_DATA[cpf]` → fallback para J
 /logout/        flush de sessão
 /onboarding/    formulário de dívidas
 /analyze/       POST — processa formulário e salva na sessão
-/dashboard/     análise principal (login obrigatório)
-/dashboard/legal/          direitos Lei 14.181/2021
-/dashboard/letter/<int>/   carta de negociação por índice da dívida
+/dashboard/                          análise principal (login obrigatório)
+/dashboard/legal/                    direitos Lei 14.181/2021
+/dashboard/letter/<int>/             carta de negociação por índice da dívida
+/dashboard/letter/<int>/pdf/         download PDF da carta (xhtml2pdf)
+/dashboard/procon/                   PROCON e Defensoria do estado do usuário
+/dashboard/mark/<int>/               POST — marca dívida como em_negociacao ou paga
 ```
+
+## Features v2 (feat/dashboard-interativo)
+
+### Feature 1 — Score de saúde financeira
+`calculate_score(monthly_income, debts)` em `rules.py`. Retorna `{"score": int, "label": str, "color": str}`. Lógica: ratio de comprometimento de renda → base score → descontos por número de dívidas (max -12) e por dívidas urgentes com pagamento ativo (-5 cada). Score 0–100, labels: Excelente/Bom/Atenção/Crítico/Emergência. Exibido no dashboard como círculo SVG com cor semântica.
+
+### Feature 2 — Simulador interativo
+Seção no `dashboard.html` com slider + input numérico sincronizados. Dado um valor disponível, o JS percorre `DEBTS_DATA` (JSON das dívidas injetado no template via `prioritized_json` no contexto) e recomenda a primeira dívida não-paga, calculando `payment`, `remaining` e `interest_saved` (estimativa: 12%/ano sobre o valor quitado).
+
+### Feature 3 — Localizador PROCON/Defensoria
+`debtfree/procon_data.py` — dict `PROCON_BY_STATE` com dados de SP, RJ, MG, RS, BA, PR, PE, CE, GO, DF, AM, SC e entrada `DEFAULT`. View `procon(request)` lê o estado de `session["user"]["address"]["state"]`. Template `procon.html` com cards de contato (telefone clicável, endereço, site) e seção explicativa de 3 passos. Link adicionado em `legal.html` na seção "Onde buscar ajuda gratuita".
+
+### Feature 4 — WhatsApp na carta
+`letter.html`: botão "Enviar pelo WhatsApp" com `href` montado via JS (`encodeURIComponent` do texto da carta) apontando para `https://wa.me/?text=...`. O link é construído no `DOMContentLoaded` para garantir que o texto final do DOM seja usado.
+
+### Feature 5 — PDF real da carta
+View `letter_pdf(request, debt_index)` gera PDF com `xhtml2pdf` (`pip install xhtml2pdf`). Reutiliza a mesma lógica de montagem de texto da view `letter`. Retorna `HttpResponse` com `content_type='application/pdf'` e header `Content-Disposition: attachment`. O botão "Baixar PDF" em `letter.html` aponta para `/dashboard/letter/<id>/pdf/` (não mais `window.print()`).
+
+### Feature 6 — Status de dívida + barra de progresso
+View `mark_debt(request, debt_index)` — POST-only, atualiza `session["debt_data"]["prioritized"][i]["debt_status"]` com `""`, `"em_negociacao"` ou `"paga"`. Se não houver `debt_data` na sessão (usuário usando mock), inicializa a partir de `_get_debt_data()` antes de gravar. Dashboard calcula `paid_debts`, `in_negotiation`, `progress_pct` e exibe barra de progresso Tailwind. Cada dívida no ranking tem mini-formulário de status com transições de estado: `→ em_negociacao → paga → (desfazer)`.
+
+---
 
 ## Business Rules
 
