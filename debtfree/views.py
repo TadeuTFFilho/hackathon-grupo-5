@@ -335,8 +335,8 @@ def dashboard(request):
     user        = request.session["user"]
     debt_data   = _get_debt_data(request)
     market      = get_market_rates()
-    prioritized = debt_data["prioritized"]
-    income      = debt_data["monthly_income"]
+    prioritized = debt_data.get("prioritized", [])
+    income      = debt_data.get("monthly_income", 0)
 
     # Enriquece cada dívida com dica de amortização e detalhe de prescrição
     for debt in prioritized:
@@ -387,8 +387,8 @@ def debts_list(request):
     user      = request.session["user"]
     debt_data = _get_debt_data(request)
     market    = get_market_rates()
-    prioritized = debt_data["prioritized"]
-    income      = debt_data["monthly_income"]
+    prioritized = debt_data.get("prioritized", [])
+    income      = debt_data.get("monthly_income", 0)
     summary     = financial_summary(income, prioritized, market)
     return render(request, "debtfree/debts_list.html", {
         **debt_data,
@@ -401,7 +401,7 @@ def debts_list(request):
 def legal(request):
     user      = request.session["user"]
     debt_data = _get_debt_data(request)
-    prescribed = [d for d in debt_data["prioritized"] if d.get("is_prescribed")]
+    prescribed = [d for d in debt_data.get("prioritized", []) if d.get("is_prescribed")]
     return render(request, "debtfree/legal.html", {**debt_data, "user": user, "prescribed_debts": prescribed})
 
 
@@ -411,7 +411,7 @@ def letter(request, debt_index):
     debt_data = _get_debt_data(request)
 
     try:
-        debt = debt_data["prioritized"][debt_index]
+        debt = debt_data.get("prioritized", [])[debt_index]
     except IndexError:
         return redirect("dashboard")
 
@@ -421,7 +421,7 @@ def letter(request, debt_index):
     try:
         ai_body = generate_letter(
             debt          = debt,
-            monthly_income= debt_data["monthly_income"],
+            monthly_income= debt_data.get("monthly_income", 0),
             user_name     = user["name"],
         )
     except Exception:
@@ -463,7 +463,7 @@ Telefone: {user['phone']}"""
         "debt":           debt,
         "letter":         letter_text,
         "user":           user,
-        "monthly_income": debt_data["monthly_income"],
+        "monthly_income": debt_data.get("monthly_income", 0),
     })
 
 
@@ -562,7 +562,7 @@ def letter_pdf(request, debt_index):
     user = request.session["user"]
     debt_data = _get_debt_data(request)
     try:
-        debt = debt_data["prioritized"][debt_index]
+        debt = debt_data.get("prioritized", [])[debt_index]
     except IndexError:
         return redirect("dashboard")
 
@@ -572,7 +572,7 @@ def letter_pdf(request, debt_index):
     try:
         ai_body = generate_letter(
             debt           = debt,
-            monthly_income = debt_data["monthly_income"],
+            monthly_income = debt_data.get("monthly_income", 0),
             user_name      = user["name"],
         )
     except Exception:
@@ -708,9 +708,9 @@ def _init_session_debts(request):
     if not request.session.get("debt_data"):
         debt_data = _get_debt_data(request)
         request.session["debt_data"] = {
-            "monthly_income": debt_data["monthly_income"],
-            "situation":      debt_data["situation"],
-            "prioritized":    [dict(d) for d in debt_data["prioritized"]],
+            "monthly_income": debt_data.get("monthly_income", 0),
+            "situation":      debt_data.get("situation", {}),
+            "prioritized":    [dict(d) for d in debt_data.get("prioritized", [])],
             "analysis":       debt_data.get("analysis"),
         }
     return request.session["debt_data"]

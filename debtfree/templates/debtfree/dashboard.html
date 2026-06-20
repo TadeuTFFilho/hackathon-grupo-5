@@ -136,20 +136,19 @@
     <span>30% — limite saudável</span>
     <span>100%</span>
   </div>
-  <div class="h-3 bg-warm-100 rounded-full overflow-hidden">
+  <div class="relative h-3 bg-warm-100 rounded-full overflow-visible">
     <div class="h-full rounded-full transition-all duration-300
       {% if summary.income_ratio > 50 %}bg-red-500
       {% elif summary.income_ratio > 30 %}bg-amber-400
       {% else %}bg-emerald-500{% endif %}"
-      style="width: {% if summary.income_ratio > 100 %}100{% else %}{{ summary.income_ratio|floatformat:0 }}{% endif %}%">
+      style="width: {% if summary.income_ratio > 100 %}100{% else %}{{ summary.income_ratio|floatformat:0 }}{% endif %}%; border-radius: 9999px;">
     </div>
+    {# Marcador 30% — sempre acima da barra #}
+    <div class="absolute top-[-4px] bottom-[-4px] w-0.5 bg-gray-400 rounded-full z-10" style="left: 30%"></div>
   </div>
   {% if summary.income_ratio > 100 %}
-  <p class="text-xs text-red-500 mt-1 font-medium">⚠ Suas dívidas superam 100% da renda ({{ summary.income_ratio }}% comprometido)</p>
+  <p class="text-xs text-red-500 mt-2 font-medium">⚠ Suas dívidas superam 100% da renda ({{ summary.income_ratio }}% comprometido)</p>
   {% endif %}
-  <div class="relative h-0">
-    <div class="absolute top-[-14px] border-l-2 border-warm-300 border-dashed h-5" style="left: 30%"></div>
-  </div>
 
   {# Dica SELIC #}
   {% if summary.interest_vs_selic > 1 %}
@@ -499,8 +498,16 @@ const DEBTS_DATA = {{ prioritized_json|safe }};
 })();
 
 const COLORS = [
-  '#2C8377','#246D65','#1D5850','#4AA9A2','#A0D3CE',
-  '#77BFB9','#C9E6E3','#f97316','#eab308','#8b5cf6'
+  '#2C8377', // teal (primário)
+  '#f97316', // laranja
+  '#8b5cf6', // roxo
+  '#eab308', // amarelo
+  '#ef4444', // vermelho
+  '#3b82f6', // azul
+  '#10b981', // verde esmeralda
+  '#ec4899', // rosa
+  '#f59e0b', // âmbar
+  '#6366f1', // índigo
 ];
 
 const labels = {{ chart_labels|safe }};
